@@ -23,12 +23,16 @@ Project workspace organized for VS Code and future development.
 - `.vscode/`
   - Workspace recommendations and editor settings
 
+## Run Locally
+
+Open [index.html](./index.html) in your browser. It redirects to the frontend app.
+
 ## Main Files
 
-- Frontend app: [frontend/index.html](/Users/lycan/Documents/Codex/2026-04-21-ai-internship-matching-platform-fhnw-version/frontend/index.html)
-- Backend readme: [backend/README.md](/Users/lycan/Documents/Codex/2026-04-21-ai-internship-matching-platform-fhnw-version/backend/README.md)
-- Backend architecture: [backend/ARCHITECTURE.md](/Users/lycan/Documents/Codex/2026-04-21-ai-internship-matching-platform-fhnw-version/backend/ARCHITECTURE.md)
-- Frontend migration notes: [docs/FRONTEND_API_MIGRATION.md](/Users/lycan/Documents/Codex/2026-04-21-ai-internship-matching-platform-fhnw-version/docs/FRONTEND_API_MIGRATION.md)
+- Frontend app: [frontend/index.html](./frontend/index.html)
+- Backend readme: [backend/README.md](./backend/README.md)
+- Backend architecture: [backend/ARCHITECTURE.md](./backend/ARCHITECTURE.md)
+- Frontend migration notes: [docs/FRONTEND_API_MIGRATION.md](./docs/FRONTEND_API_MIGRATION.md)
 
 ## Notes
 
