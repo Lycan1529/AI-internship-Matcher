@@ -25,7 +25,7 @@ Project workspace organized for VS Code and future development.
 
 ## Run Locally
 
-Open [index.html](./index.html) in your browser. It redirects to the frontend app.
+Open [index.html](./index.html) in your browser. It redirects to the frontend app. If your browser blocks `file://` access, serve this folder with a simple local server (for example, VS Code Live Server).
 
 ## Main Files
 
