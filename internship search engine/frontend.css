@@ -1,0 +1,172 @@
+  border-radius: 8px;
+  background: var(--surface-2);
+}
+
+.cv-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: start;
+}
+
+.mini-score {
+  width: 86px;
+  min-height: 66px;
+}
+
+.cv-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.cv-grid > div,
+.cv-section {
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-2);
+}
+
+.cv-section {
+  margin-top: 12px;
+}
+
+.cv-label {
+  display: block;
+  margin-bottom: 7px;
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.cv-list {
+  margin: 0;
+  padding-left: 20px;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.kanban {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.kanban-column {
+  min-height: 170px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-2);
+}
+
+.kanban-card {
+  margin-top: 10px;
+  padding: 10px;
+  border-radius: 7px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+
+.logic-flow {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(150px, 1fr));
+  gap: 12px;
+}
+
+.logic-flow div {
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-2);
+}
+
+.logic-flow span {
+  color: var(--accent);
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.logic-flow p {
+  margin-bottom: 0;
+  color: var(--muted);
+}
+
+.stat-card {
+  padding: 18px;
+}
+
+.stat-card span {
+  color: var(--muted);
+  font-weight: 850;
+}
+
+.stat-card strong {
+  display: block;
+  margin-top: 8px;
+  font-size: 2rem;
+}
+
+@media (max-width: 1080px) {
+  .app-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .app-sidebar {
+    position: static;
+    height: auto;
+  }
+
+  .side-nav {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .dashboard-grid,
+  .recruiter-grid,
+  .admin-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-panel,
+  .profile-panel,
+  .wide-panel {
+    grid-row: auto;
+    grid-column: auto;
+  }
+
+  .logic-flow {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .topbar,
+  .panel-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .side-nav,
+  .form-grid,
+  .cv-grid,
+  .kanban,
+  .match-card {
+    grid-template-columns: 1fr;
+  }
+
+  .application-review,
+  .cv-header {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
+  .hero-score {
+    float: none;
+    width: 100%;
+    margin: 12px 0;
+  }
+}

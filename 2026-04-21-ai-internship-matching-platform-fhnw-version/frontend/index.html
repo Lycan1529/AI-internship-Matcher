@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FHNW AI Internship Matcher</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="app-sidebar">
+        <div class="brand">
+          <span class="brand-mark">FH</span>
+          <div>
+            <strong>FHNW AI Internship Matcher</strong>
+            <span>Business IT career intelligence</span>
+          </div>
+        </div>
+
+        <nav class="side-nav" aria-label="Primary navigation">
+          <button class="is-active" data-view="studentView" type="button">Dashboard</button>
+          <button data-view="companyView" type="button">Recruiter</button>
+          <button data-view="adminView" type="button">AI Engine</button>
+        </nav>
+
+        <div class="sidebar-card">
+          <span class="eyebrow">Swiss Market</span>
+          <strong>Zurich, Basel, Olten</strong>
+          <p>Focused on FHNW Business IT students and regional internship pipelines.</p>
+        </div>
+      </aside>
+
+      <div class="app-main">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">AI internship discovery platform</p>
+            <h1>Find smarter internship matches with AI and live job data</h1>
+            <p class="topbar-subtitle">Discover internships from LinkedIn, Indeed, Glassdoor, and company career pages - ranked based on your skills, preferences, and career goals.</p>
+          </div>
+          <div class="topbar-actions">
+            <span class="language-pill">EN / DE</span>
+            <button class="theme-toggle" id="themeToggle" type="button">Dark mode</button>
+          </div>
+        </header>
+
+        <main>
+          <section class="dashboard-view is-visible" id="studentView">
+            <div class="dashboard-grid">
+              <section class="panel profile-panel">
+                <div class="panel-header">
+                  <div>
+                    <p class="eyebrow">Student Profile</p>
+                    <h2>FHNW student profile</h2>
+                  </div>
+                  <select id="studentSelect" aria-label="Active student"></select>
+                </div>
+                <div id="studentProfile"></div>
+                <form class="data-form compact-form" id="studentForm">
+                  <div class="form-title">
+                    <strong>Edit profile</strong>
+                    <span>Local prototype data</span>
+                  </div>
+                  <label>Name<input name="name" required placeholder="Ari Schmid" /></label>
+                  <label>Degree<input name="program" required placeholder="BSc Business Information Technology" /></label>
+                  <div class="form-grid">
+                    <label>Semester<input name="semester" required min="1" max="12" type="number" value="4" /></label>
+                    <label>Location<input name="location" required placeholder="Zurich" /></label>
+                  </div>
+                  <div class="form-grid">
+                    <label>Availability<input name="availability" required placeholder="August 2026" /></label>
+                    <label>
+                      Mode
+                      <select name="mode">
+                        <option>Hybrid</option>
+                        <option>Remote</option>
+                        <option>On-site</option>
+                      </select>
+                    </label>
+                  </div>
+                  <label>Skills<input name="skills" required placeholder="Python, Data Analysis, AI" /></label>
+                  <label>Preferences<input name="interests" required placeholder="ai, finance, consulting" /></label>
+                  <label>Languages<input name="languages" required placeholder="German, English" /></label>
+                  <div class="button-row">
+                    <button class="primary-action" id="studentSubmit" type="submit">Save student</button>
+                    <button class="secondary-action" id="newStudent" type="button">New</button>
+                  </div>
+                </form>
+              </section>
+
+              <section class="panel hero-panel">
+                <div>
+                  <p class="eyebrow">Top Matches for You</p>
+                  <h2>Live AI-ranked internships</h2>
+                </div>
+                <div class="search-panel">
+                  <label class="search-label" for="internshipSearch">Search all collected internships</label>
+                  <input id="internshipSearch" type="search" placeholder="Search arts, agriculture, history, museums, sustainability, media..." />
+                  <div class="discovery-controls">
+                    <div class="chip-row" id="categoryChips">
+                      <button class="filter-chip is-active" data-category="all" type="button">All</button>
+                      <button class="filter-chip" data-category="tech" type="button">Tech</button>
+                      <button class="filter-chip" data-category="arts" type="button">Arts</button>
+                      <button class="filter-chip" data-category="agriculture" type="button">Agriculture</button>
+                      <button class="filter-chip" data-category="history" type="button">History</button>
+                      <button class="filter-chip" data-category="media" type="button">Media</button>
+                      <button class="filter-chip" data-category="public sector" type="button">Public Sector</button>
+                      <button class="filter-chip" data-category="sustainability" type="button">Sustainability</button>
+                    </div>
+                    <div class="mode-switch" id="searchModeSwitch" aria-label="Search mode">
+                      <button class="is-active" data-mode="recommended" type="button">AI Recommended</button>
+                      <button data-mode="search" type="button">Search All Sources</button>
+                    </div>
+                  </div>
+                </div>
+                <div class="hero-score">
+                  <span>Best match</span>
+                  <strong id="bestMatchScore">0%</strong>
+                </div>
+                <div class="live-ai-panel" id="liveAiPanel"></div>
+                <div class="match-list" id="studentMatches"></div>
+              </section>
+
+              <section class="panel">
+                <div class="panel-header">
+                  <div>
+                    <p class="eyebrow">Skill Gap Analysis</p>
+                    <h2>What to learn next</h2>
+                  </div>
+                  <span class="status">AI advice</span>
+                </div>
+                <div id="skillGapPanel"></div>
+              </section>
+
+              <section class="panel">
+                <div class="panel-header">
+                  <div>
+                    <p class="eyebrow">Application Tracker</p>
+                    <h2>Pipeline timeline</h2>
+                  </div>
+                </div>
+                <div id="applicationTracker"></div>
+              </section>
+            </div>
+          </section>
+
+          <section class="dashboard-view" id="companyView">
+            <div class="dashboard-grid recruiter-grid">
+              <section class="panel profile-panel">
+                <div class="panel-header">
+                  <div>
+                    <p class="eyebrow">Posting Tool</p>
+                    <h2>Internship role setup</h2>
+                  </div>
+                  <select id="internshipSelect" aria-label="Internship listing"></select>
+                </div>
+                <div id="internshipProfile"></div>
+                <form class="data-form compact-form" id="internshipForm">
+                  <div class="form-title">
+                    <strong>Edit posting</strong>
+                    <span>Recruiter workspace</span>
+                  </div>
+                  <label>Role title<input name="title" required placeholder="AI Product Intern" /></label>
+                  <label>Company<input name="company" required placeholder="FHNW Partner AG" /></label>
+                  <div class="form-grid">
+                    <label>Location<input name="location" required placeholder="Basel" /></label>
+                    <label>
+                      Mode
+                      <select name="mode">
+                        <option>Hybrid</option>
+                        <option>Remote</option>
+                        <option>On-site</option>
+                      </select>
+                    </label>
+                  </div>
+                  <label>Starts<input name="starts" required placeholder="August 2026" /></label>
+                  <label>Required skills<input name="required" required placeholder="Python, SQL, AI" /></label>
+                  <label>Preferred qualifications<input name="preferred" required placeholder="Power BI, Presentation" /></label>
+                  <label>Focus areas<input name="interests" required placeholder="ai, consulting" /></label>
+                  <div class="button-row">
+                    <button class="primary-action" id="internshipSubmit" type="submit">Save internship</button>
+                    <button class="secondary-action" id="newInternship" type="button">New</button>
+                  </div>
+                </form>
+              </section>
+
+              <section class="panel hero-panel">
+                <div>
+                  <p class="eyebrow">Candidate Matching</p>
+                  <h2>Ranked FHNW students</h2>
+                </div>
+                <div class="filter-row">
+                  <span>Skills</span>
+                  <span>Experience</span>
+                  <span>Availability</span>
+                  <span>Location</span>
+                </div>
+                <div class="match-list" id="candidateMatches"></div>
+              </section>
+
+              <section class="panel">
+                <div class="panel-header">
+                  <div>
+                    <p class="eyebrow">Candidate Profile View</p>
+                    <h2>AI summary</h2>
+                  </div>
+                </div>
+                <div id="candidateSummary"></div>
+              </section>
+
+              <section class="panel">
+                <div class="panel-header">
+                  <div>
+                    <p class="eyebrow">Application Review</p>
+                    <h2>Submitted applications</h2>
+                  </div>
+                </div>
+                <div id="recruiterApplications"></div>
+              </section>
+
+              <section class="panel cv-review-panel">
+                <div class="panel-header">
+                  <div>
+                    <p class="eyebrow">CV Review</p>
+                    <h2>Student CV and match evidence</h2>
+                  </div>
+                </div>
+                <div id="cvReviewPanel"></div>
+              </section>
+
+              <section class="panel">
+                <div class="panel-header">
+                  <div>
+                    <p class="eyebrow">Hiring Pipeline</p>
+                    <h2>Recruiter kanban</h2>
+                  </div>
+                </div>
+                <div class="kanban" id="hiringPipeline"></div>
+              </section>
+            </div>
+          </section>
+
+          <section class="dashboard-view" id="adminView">
+            <div class="admin-grid">
+              <section class="panel wide-panel">
+                <div class="panel-header">
+                  <div>
+                    <p class="eyebrow">AI Engine</p>
+                    <h2>Visual matching logic</h2>
+                  </div>
+                  <button class="secondary-action compact" id="resetData" type="button">Reset demo data</button>
+                </div>
+                <div class="logic-flow">
+                  <div><span>Input</span><strong>Student profile</strong><p>Skills, experience, preferences, languages</p></div>
+                  <div><span>Input</span><strong>Internship requirements</strong><p>Role, required skills, location, availability</p></div>
+                  <div><span>Processing</span><strong>Weighted scoring</strong><p>Skills > experience > preferences</p></div>
+                  <div><span>Reasoning</span><strong>LLM explanation</strong><p>Why this match and what to improve</p></div>
+                  <div><span>Output</span><strong>Ranked matches</strong><p>Score, gap analysis, next actions</p></div>
+                </div>
+              </section>
+
+              <article class="stat-card"><span>Active students</span><strong id="studentCount">0</strong></article>
+              <article class="stat-card"><span>Open internships</span><strong id="internshipCount">0</strong></article>
+              <article class="stat-card"><span>Total applications</span><strong id="applicationCount">0</strong></article>
+              <article class="stat-card"><span>Total notifications</span><strong id="notificationCount">0</strong></article>
+
+              <section class="panel">
+                <div class="panel-header">
+                  <div>
+                    <p class="eyebrow">Aggregation Engine</p>
+                    <h2>Source distribution</h2>
+                  </div>
+                </div>
+                <div id="sourceDistribution"></div>
+              </section>
+
+              <section class="panel">
+                <div class="panel-header">
+                  <div>
+                    <p class="eyebrow">Data Freshness</p>
+                    <h2>Collection monitoring</h2>
+                  </div>
+                </div>
+                <div id="freshnessPanel"></div>
+              </section>
+
+              <section class="panel">
+                <div class="panel-header">
+                  <div>
+                    <p class="eyebrow">Deduplication</p>
+                    <h2>Duplicate source tracking</h2>
+                  </div>
+                </div>
+                <div id="dedupePanel"></div>
+              </section>
+
+              <article class="stat-card"><span>Average score</span><strong id="averageScore">0%</strong></article>
+
+              <section class="panel">
+                <div class="panel-header">
+                  <div>
+                    <p class="eyebrow">Notifications</p>
+                    <h2>New matches and deadlines</h2>
+                  </div>
+                </div>
+                <div id="notificationsPanel"></div>
+              </section>
+
+              <section class="panel">
+                <div class="panel-header">
+                  <div>
+                    <p class="eyebrow">Swiss Skill Demand</p>
+                    <h2>Market signal</h2>
+                  </div>
+                </div>
+                <div id="skillDemand"></div>
+              </section>
+
+              <section class="panel wide-panel">
+                <div class="panel-header">
+                  <div>
+                    <p class="eyebrow">Admin Queue</p>
+                    <h2>Company posting approval</h2>
+                  </div>
+                </div>
+                <div id="approvalQueue"></div>
+              </section>
+            </div>
+          </section>
+        </main>
+      </div>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>
