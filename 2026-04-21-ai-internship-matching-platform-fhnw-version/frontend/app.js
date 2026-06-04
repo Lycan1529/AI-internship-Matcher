@@ -862,6 +862,41 @@ function reviewApplication(applicationId) {
   renderCandidateMatches();
 }
 
+function profileStrength(student) {
+  const checkpoints = [
+    student.name,
+    student.program,
+    student.location,
+    student.availability,
+    student.mode,
+    student.skills.length >= 4,
+    student.interests.length >= 2,
+    student.languages.length >= 2,
+    student.experience.length >= 2,
+    student.cvSummary,
+  ];
+  const completed = checkpoints.filter(Boolean).length;
+  return Math.round((completed / checkpoints.length) * 100);
+}
+
+function renderStudentOverview(student, visibleMatches) {
+  const activeSources = new Set(internships.filter((item) => item.isActive).map((item) => item.sourceName)).size;
+  const studentApplications = applications.filter((application) => application.studentId === student.id).length;
+  $("#studentActiveSources").textContent = activeSources;
+  $("#studentDiscoveryCount").textContent = visibleMatches.length;
+  $("#studentApplicationTotal").textContent = studentApplications;
+  $("#studentProfileStrength").textContent = `${profileStrength(student)}%`;
+}
+
+function renderRecruiterOverview(internship, rankedMatches) {
+  const internshipApplications = applications.filter((application) => application.internshipId === internship.id);
+  const pipelineCount = internshipApplications.filter((application) => ["Applied", "Interview", "Offer"].includes(application.status)).length;
+  $("#recruiterOpenRoles").textContent = internships.length;
+  $("#recruiterApplicationCount").textContent = internshipApplications.length;
+  $("#recruiterTopCandidate").textContent = `${rankedMatches[0]?.result.score || 0}%`;
+  $("#recruiterPipelineCount").textContent = pipelineCount;
+}
+
 function renderStudentMatches(options = {}) {
   const storedStudent = students.find((item) => item.id === $("#studentSelect").value);
   const student = options.live ? studentFromForm(storedStudent) : storedStudent;
@@ -878,6 +913,7 @@ function renderStudentMatches(options = {}) {
   const visible = searchMode === "search" ? ranked : ranked.slice(0, 10);
 
   $("#bestMatchScore").textContent = `${visible[0]?.result.score || 0}%`;
+  renderStudentOverview(student, visible);
   renderLiveAiPanel(student, visible, Boolean(options.live));
   $("#studentMatches").innerHTML = visible
     .map(({ internship, result }) => {
@@ -909,6 +945,7 @@ function renderCandidateMatches() {
     .map((student) => ({ student, result: calculateMatch(student, internship) }))
     .sort((a, b) => b.result.score - a.result.score);
 
+  renderRecruiterOverview(internship, ranked);
   $("#candidateMatches").innerHTML = ranked
     .map(({ student, result }) =>
       matchCard(student.name, `${student.program} - ${student.location} - Available ${student.availability}`, result, {

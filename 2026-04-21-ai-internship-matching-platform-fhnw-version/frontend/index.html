@@ -45,7 +45,38 @@
 
         <main>
           <section class="dashboard-view is-visible" id="studentView">
-            <div class="dashboard-grid">
+            <div class="view-intro">
+              <div>
+                <p class="eyebrow">Student workspace</p>
+                <h2>Discovery dashboard</h2>
+              </div>
+              <p class="view-copy">Profile, recommendations, search, and applications are grouped the same way as the Figma product frames so the frontend and design stay aligned.</p>
+            </div>
+
+            <div class="metrics-row">
+              <article class="metric-card">
+                <span>Active sources</span>
+                <strong id="studentActiveSources">0</strong>
+                <p>Approved boards and company pages feeding discovery.</p>
+              </article>
+              <article class="metric-card">
+                <span>Search results</span>
+                <strong id="studentDiscoveryCount">0</strong>
+                <p>Internships currently visible in your selected mode.</p>
+              </article>
+              <article class="metric-card">
+                <span>Applications</span>
+                <strong id="studentApplicationTotal">0</strong>
+                <p>Live application workflow tracked from this dashboard.</p>
+              </article>
+              <article class="metric-card">
+                <span>Profile strength</span>
+                <strong id="studentProfileStrength">0%</strong>
+                <p>Quick signal of how complete and match-ready the profile is.</p>
+              </article>
+            </div>
+
+            <div class="dashboard-grid dashboard-grid-student">
               <section class="panel profile-panel">
                 <div class="panel-header">
                   <div>
@@ -144,6 +175,37 @@
           </section>
 
           <section class="dashboard-view" id="companyView">
+            <div class="view-intro">
+              <div>
+                <p class="eyebrow">Recruiter workspace</p>
+                <h2>Review and hiring flow</h2>
+              </div>
+              <p class="view-copy">The recruiter side now follows the same frame logic as the Figma board: posting setup, candidate review, application inspection, and pipeline movement.</p>
+            </div>
+
+            <div class="metrics-row">
+              <article class="metric-card">
+                <span>Open roles</span>
+                <strong id="recruiterOpenRoles">0</strong>
+                <p>Internships visible in the recruiter workspace.</p>
+              </article>
+              <article class="metric-card">
+                <span>Applications</span>
+                <strong id="recruiterApplicationCount">0</strong>
+                <p>Submitted applications for the selected role.</p>
+              </article>
+              <article class="metric-card">
+                <span>Top candidate</span>
+                <strong id="recruiterTopCandidate">0%</strong>
+                <p>Highest current match score for the active internship.</p>
+              </article>
+              <article class="metric-card">
+                <span>Pipeline active</span>
+                <strong id="recruiterPipelineCount">0</strong>
+                <p>Candidates currently in Applied, Interview, or Offer stages.</p>
+              </article>
+            </div>
+
             <div class="dashboard-grid recruiter-grid">
               <section class="panel profile-panel">
                 <div class="panel-header">
@@ -240,6 +302,13 @@
           </section>
 
           <section class="dashboard-view" id="adminView">
+            <div class="view-intro">
+              <div>
+                <p class="eyebrow">Platform operations</p>
+                <h2>Architecture and analytics</h2>
+              </div>
+              <p class="view-copy">This section stays presentation-ready for FHNW by showing how ingestion, matching, notifications, and oversight fit together in one operational layer.</p>
+            </div>
             <div class="admin-grid">
               <section class="panel wide-panel">
                 <div class="panel-header">
