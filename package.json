@@ -1,0 +1,19 @@
+{
+  "name": "lycan-ai-internship-matching-platform",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently -k -n api,web -c cyan,magenta \"npm --prefix backend run dev\" \"http-server frontend -p 4173 -c-1\"",
+    "dev:api": "npm --prefix backend run dev",
+    "dev:web": "http-server frontend -p 4173 -c-1",
+    "test": "npm --prefix backend run test",
+    "build": "npm run build:frontend && npm --prefix backend run prisma:generate",
+    "build:frontend": "node scripts/configure-frontend.mjs",
+    "db:migrate": "npm --prefix backend run prisma:migrate",
+    "db:seed": "npm --prefix backend run seed"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2",
+    "http-server": "^14.1.1"
+  }
+}

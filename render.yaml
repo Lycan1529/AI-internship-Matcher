@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: lycan-internship-api
+    runtime: node
+    rootDir: backend
+    buildCommand: npm install && npm run prisma:generate
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: FRONTEND_ORIGIN
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: MATCHING_PROVIDER
+        value: local
+      - key: EXPLANATION_PROVIDER
+        value: local

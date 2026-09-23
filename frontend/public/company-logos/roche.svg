@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 64">
+  <rect width="160" height="64" rx="12" fill="#fff"/>
+  <path d="M14 32 26 16h30l12 16-12 16H26z" fill="none" stroke="#0070C9" stroke-width="3"/>
+  <text x="26" y="39" font-family="Arial, sans-serif" font-size="16" font-weight="700" fill="#0070C9">Roche</text>
+</svg>

@@ -1,0 +1,986 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Lycan Internship Matcher</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script src="runtime-config.js"></script>
+  </head>
+  <body>
+    <div class="feedback-banner is-hidden" id="feedbackBanner" role="status" aria-live="polite"></div>
+    <div class="app-loading is-hidden" id="appLoading" aria-live="polite" aria-busy="true">
+      <div class="app-loading-card">
+        <span class="app-loading-spinner" aria-hidden="true"></span>
+        <div>
+          <strong id="appLoadingTitle">Loading workspace</strong>
+          <p id="appLoadingMessage">Syncing your dashboard with the backend.</p>
+        </div>
+      </div>
+    </div>
+    <div class="public-shell" id="publicShell">
+      <header class="public-topbar">
+        <div class="brand brand-dark">
+          <span class="brand-mark">LY</span>
+          <div>
+            <strong>Lycan AI Internship Matching Platform</strong>
+            <span>Access</span>
+          </div>
+        </div>
+        <nav class="public-nav" aria-label="Public navigation">
+          <button class="secondary-action compact" id="openLogin" type="button">Login</button>
+          <button class="primary-action compact-fill" id="openRegister" type="button">Register</button>
+        </nav>
+      </header>
+
+      <main class="public-main">
+        <section class="public-band auth-band" id="authSection">
+          <div class="auth-card-shell">
+            <article class="auth-flip-card" id="authCard">
+              <div class="auth-flip-inner">
+                <section class="public-card auth-face auth-face-front" id="authFaceLogin">
+                  <div class="section-heading-public compact-heading">
+                    <p class="eyebrow">Login</p>
+                    <h2>Sign in</h2>
+                  </div>
+                  <form id="loginForm" class="public-form">
+                    <label>Email<input type="email" name="email" placeholder="student@fhnw.ch" required /></label>
+                    <label>Password<input type="password" name="password" placeholder="Password" required /></label>
+                    <button class="primary-action compact-fill" id="loginSubmitButton" type="button" onclick="return window.submitLoginForm && window.submitLoginForm(event, this);">Login</button>
+                  </form>
+                  <div class="auth-switch">
+                    <span>New here?</span>
+                    <button class="inline-switch" id="showRegisterCard" type="button">Create account</button>
+                  </div>
+                </section>
+
+                <section class="public-card auth-face auth-face-back" id="authFaceRegister">
+                  <div class="section-heading-public compact-heading">
+                    <p class="eyebrow">Register</p>
+                    <h2>Create account</h2>
+                  </div>
+                  <form id="registerForm" class="public-form">
+                    <label>Name<input type="text" name="name" placeholder="Lycan Student" required /></label>
+                    <label>Email<input type="email" name="email" placeholder="you@example.com" required /></label>
+                    <label>Password<input type="password" name="password" placeholder="Choose a password" required /></label>
+                    <label>Role
+                      <select name="role">
+                        <option>student</option>
+                        <option>recruiter</option>
+                      </select>
+                    </label>
+                    <button class="primary-action compact-fill" id="registerSubmitButton" type="button" onclick="return window.submitRegisterForm && window.submitRegisterForm(event, this);">Create account</button>
+                  </form>
+                  <div class="auth-switch">
+                    <span>Already have an account?</span>
+                    <button class="inline-switch" id="showLoginCard" type="button">Login</button>
+                  </div>
+                </section>
+              </div>
+            </article>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <div class="app-shell is-hidden" id="appShell">
+      <aside class="app-sidebar">
+        <div class="brand">
+          <span class="brand-mark" aria-label="Lycan">L</span>
+          <div>
+            <strong>LYCAN</strong>
+            <span>Internship Matcher</span>
+          </div>
+        </div>
+        <button class="mobile-nav-toggle" id="mobileNavToggle" type="button" aria-expanded="false" aria-controls="primaryNavigation">Menu</button>
+
+        <nav class="side-nav" id="primaryNavigation" aria-label="Primary navigation">
+          <button class="is-active" data-view="studentView" id="studentNavButton" type="button"><span class="nav-icon" aria-hidden="true"><i data-lucide="layout-dashboard"></i></span><span>Dashboard</span></button>
+          <button class="student-nav-item" data-scroll-target="studentMatches" type="button"><span class="nav-icon" aria-hidden="true"><i data-lucide="search"></i></span><span>Find Internships</span></button>
+          <button class="student-nav-item" data-scroll-target="applicationTracker" type="button"><span class="nav-icon" aria-hidden="true"><i data-lucide="briefcase-business"></i></span><span>My Applications</span></button>
+          <button class="student-nav-item" data-scroll-target="studentMatches" type="button"><span class="nav-icon" aria-hidden="true"><i data-lucide="sparkles"></i></span><span>Matches</span></button>
+          <button class="student-nav-item" data-scroll-target="studentProfilePanel" type="button"><span class="nav-icon" aria-hidden="true"><i data-lucide="circle-user-round"></i></span><span>My Profile</span></button>
+          <button class="student-nav-item" data-scroll-target="studentForm" type="button"><span class="nav-icon" aria-hidden="true"><i data-lucide="file-text"></i></span><span>CV &amp; Documents</span></button>
+          <button class="student-nav-item" data-scroll-target="headerNotifications" data-open-notifications="true" type="button"><span class="nav-icon" aria-hidden="true"><i data-lucide="bell"></i></span><span>Notifications</span></button>
+          <button class="student-nav-item" data-scroll-target="skillGapPanel" type="button"><span class="nav-icon" aria-hidden="true"><i data-lucide="book-open"></i></span><span>Career Resources</span></button>
+          <button class="recruiter-nav-item" data-view="companyView" id="recruiterNavButton" type="button"><span class="nav-icon" aria-hidden="true"><i data-lucide="layout-dashboard"></i></span><span>Dashboard</span></button>
+          <button class="recruiter-nav-item" data-scroll-target="recruiterPostingsSection" type="button"><span class="nav-icon" aria-hidden="true"><i data-lucide="briefcase-business"></i></span><span>My Internships</span></button>
+          <button class="recruiter-nav-item" data-scroll-target="recruiterCandidatesSection" type="button"><span class="nav-icon" aria-hidden="true"><i data-lucide="users"></i></span><span>Candidates</span></button>
+          <button class="recruiter-nav-item" data-scroll-target="recruiterApplicationsSection" type="button"><span class="nav-icon" aria-hidden="true"><i data-lucide="file-text"></i></span><span>Applications</span></button>
+          <button class="recruiter-nav-item" data-scroll-target="recruiterPipelineSection" type="button"><span class="nav-icon" aria-hidden="true"><i data-lucide="columns-3"></i></span><span>Hiring Pipeline</span></button>
+          <button class="recruiter-nav-item" data-scroll-target="recruiterActivitySection" type="button"><span class="nav-icon" aria-hidden="true"><i data-lucide="activity"></i></span><span>Messages &amp; Activity</span></button>
+          <button class="recruiter-nav-item" data-scroll-target="companyProfileSection" type="button"><span class="nav-icon" aria-hidden="true"><i data-lucide="building-2"></i></span><span>Company Profile</span></button>
+          <button class="recruiter-nav-item" data-scroll-target="headerNotifications" data-open-notifications="true" type="button"><span class="nav-icon" aria-hidden="true"><i data-lucide="bell"></i></span><span>Notifications</span></button>
+          <button data-view="adminView" id="adminNavButton" type="button">Admin</button>
+        </nav>
+
+        <div class="sidebar-card">
+          <span class="eyebrow">Mode</span>
+          <strong id="sessionRoleLabel">App</strong>
+          <p class="sidebar-meta" id="sessionUserLabel">Not signed in</p>
+          <button class="secondary-action compact" id="logoutButton" type="button">Logout</button>
+        </div>
+      </aside>
+
+      <div class="app-main">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Dashboard</p>
+            <h1>Internships</h1>
+          </div>
+          <div class="topbar-actions">
+            <label class="global-search" for="globalInternshipSearch">
+              <span aria-hidden="true">⌕</span>
+              <input id="globalInternshipSearch" type="search" aria-label="Search internships, companies, or skills" placeholder="Search internships, companies or skills..." />
+            </label>
+            <div class="header-notifications" id="headerNotifications">
+              <button class="notification-toggle" id="notificationToggle" type="button" aria-expanded="false" aria-controls="headerNotificationsPanel" aria-label="Open notifications">
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v11a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 17.5zm2.2-.5 5.8 5 5.8-5zM18 8.2l-5.3 4.6a1 1 0 0 1-1.4 0L6 8.2v9.3c0 .28.22.5.5.5h11a.5.5 0 0 0 .5-.5z"></path>
+                </svg>
+                <span class="notification-badge" id="notificationBadge">0</span>
+              </button>
+              <div class="header-notifications-panel" id="headerNotificationsPanel" hidden>
+                <div class="panel-header header-notifications-head">
+                  <div>
+                    <p class="eyebrow">Notifications</p>
+                    <h2>Inbox</h2>
+                  </div>
+                </div>
+                <div id="headerNotificationsList"></div>
+              </div>
+            </div>
+            <div class="account-menu" id="accountMenu">
+              <button class="account-toggle" id="accountToggle" type="button" aria-expanded="false" aria-controls="accountDropdown">
+                <span class="account-avatar"><img id="accountAvatarImage" src="public/avatars/default-student.png" alt="Student profile photo" onerror="this.hidden=true;this.nextElementSibling.style.display='grid'"><span id="accountAvatar">LY</span></span>
+                <span class="account-identity"><strong id="accountName">Your profile</strong><small id="accountProgram">Student</small></span>
+                <svg class="account-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5"/></svg>
+              </button>
+              <div class="account-dropdown" id="accountDropdown" hidden role="menu" aria-label="Account menu">
+                <button type="button" data-account-action="profile" role="menuitem">My Profile</button>
+                <button type="button" data-account-action="settings" role="menuitem">Account Settings</button>
+                <button type="button" data-account-action="preferences" role="menuitem">Preferences</button>
+                <button type="button" data-account-action="notifications" role="menuitem">Notifications</button>
+                <button type="button" data-account-action="appearance" role="menuitem">Appearance</button>
+                <button type="button" data-account-action="support" role="menuitem">Help &amp; Support</button>
+                <hr>
+                <button class="account-signout" type="button" data-account-action="logout" role="menuitem">Sign Out</button>
+              </div>
+            </div>
+            <button class="language-pill" id="languageToggle" type="button" aria-label="Switch language">EN / DE</button>
+            <button class="theme-toggle" id="themeToggle" type="button">Dark mode</button>
+          </div>
+        </header>
+
+        <main>
+          <section class="dashboard-view is-visible" id="studentView">
+            <div class="view-intro">
+              <div>
+                <p class="eyebrow">Student workspace</p>
+                <h2 id="studentWelcome">Good morning</h2>
+                <p class="view-copy">Here are your top internship matches.</p>
+              </div>
+            </div>
+
+            <div class="metrics-row">
+              <article class="metric-card">
+                <span class="metric-icon metric-icon--violet" aria-hidden="true"><i data-lucide="database"></i></span>
+                <span>Active sources</span>
+                <strong id="studentActiveSources">0</strong>
+              </article>
+              <article class="metric-card">
+                <span class="metric-icon metric-icon--green" aria-hidden="true"><i data-lucide="search"></i></span>
+                <span>Search results</span>
+                <strong id="studentDiscoveryCount">0</strong>
+              </article>
+              <article class="metric-card">
+                <span class="metric-icon metric-icon--rose" aria-hidden="true"><i data-lucide="briefcase-business"></i></span>
+                <span>Applications</span>
+                <strong id="studentApplicationTotal">0</strong>
+              </article>
+              <article class="metric-card">
+                <span class="metric-icon metric-icon--amber" aria-hidden="true"><i data-lucide="user-round-check"></i></span>
+                <span>Profile strength</span>
+                <strong id="studentProfileStrength">0%</strong>
+                <span class="metric-progress" aria-hidden="true"><i id="studentProfileProgress"></i></span>
+              </article>
+            </div>
+
+            <div class="dashboard-grid dashboard-grid-student">
+              <section class="panel profile-panel" id="studentProfilePanel">
+                <div class="panel-header">
+                  <div>
+                    <p class="eyebrow">Student Profile</p>
+                    <h2>Profile</h2>
+                  </div>
+                  <select id="studentSelect" aria-label="Active student"></select>
+                </div>
+                <div id="studentProfile"></div>
+                <form class="data-form compact-form" id="studentForm">
+                  <div class="form-title">
+                    <strong>Edit profile</strong>
+                  </div>
+                  <div class="avatar-upload" id="avatarUpload">
+                    <img id="profileAvatarPreview" src="public/avatars/default-student.png" alt="Profile photo preview" />
+                    <div>
+                      <strong>Profile photo</strong>
+                      <span>PNG, JPG, or WebP up to 5 MB</span>
+                    </div>
+                    <label class="secondary-action avatar-upload-control">
+                      Choose photo
+                      <input name="avatarFile" id="avatarFile" type="file" accept="image/png,image/jpeg,image/webp" />
+                    </label>
+                    <button class="primary-action" id="uploadAvatarButton" type="button">Upload</button>
+                  </div>
+                  <label>Name<input name="name" required placeholder="Ari Schmid" /></label>
+                  <label>Degree<input name="program" required placeholder="BSc Business Information Technology" /></label>
+                  <div class="form-grid">
+                    <label>Semester<input name="semester" required min="1" max="12" type="number" value="4" /></label>
+                    <label>Location<input name="location" required placeholder="Zurich" /></label>
+                  </div>
+                  <div class="form-grid">
+                    <label>Availability<input name="availability" required placeholder="August 2026" /></label>
+                    <label>
+                      Mode
+                      <select name="mode">
+                        <option>Hybrid</option>
+                        <option>Remote</option>
+                        <option>On-site</option>
+                      </select>
+                    </label>
+                  </div>
+                  <label>Skills<input name="skills" required placeholder="Python, Data Analysis, AI" /></label>
+                  <label>Preferences<input name="interests" required placeholder="ai, finance, consulting" /></label>
+                  <label>Languages<input name="languages" required placeholder="German, English" /></label>
+                  <label id="cvFileField">
+                    CV file
+                    <input name="cvFile" id="cvFile" type="file" accept=".pdf,.txt,.doc,.docx" />
+                  </label>
+                  <label>
+                    CV summary
+                    <textarea name="cvSummary" rows="4" placeholder="Summarize your experience, strengths, and internship goals."></textarea>
+                  </label>
+                  <div class="button-row">
+                    <button class="secondary-action" id="uploadCvButton" type="button">Upload CV</button>
+                    <button class="secondary-action" id="parseCvButton" type="button">Parse CV</button>
+                  </div>
+                  <div class="cv-upload-status" id="cvUploadStatus">No CV uploaded in this session.</div>
+                  <div class="button-row">
+                    <button class="primary-action" id="studentSubmit" type="submit">Save student</button>
+                    <button class="secondary-action" id="newStudent" type="button">New</button>
+                  </div>
+                </form>
+              </section>
+
+              <section class="panel hero-panel">
+                <div>
+                  <p class="eyebrow">Top Matches for You</p>
+                  <h2>Matches</h2>
+                </div>
+                <div class="search-panel">
+                  <label class="search-label" for="internshipSearch">Search all collected internships</label>
+                  <input id="internshipSearch" type="search" aria-label="Search internships" placeholder="Search arts, agriculture, history, museums, sustainability, media..." />
+                  <div class="filter-grid">
+                    <label>
+                      Location
+                      <select id="locationFilter" aria-label="Filter internships by location">
+                        <option value="all">All locations</option>
+                      </select>
+                    </label>
+                    <label>
+                      Min match
+                      <select id="thresholdFilter" aria-label="Filter internships by minimum match score">
+                        <option value="0">Any score</option>
+                        <option value="40">40%+</option>
+                        <option value="55">55%+</option>
+                        <option value="70">70%+</option>
+                        <option value="85">85%+</option>
+                      </select>
+                    </label>
+                    <label>
+                      Status
+                      <select id="statusFilter" aria-label="Filter internships by application status">
+                        <option value="all">All statuses</option>
+                        <option value="open">Open to apply</option>
+                        <option value="applied">Applied</option>
+                        <option value="unapplied">Not applied</option>
+                      </select>
+                    </label>
+                    <label>
+                      Skill focus
+                      <input id="skillFilter" type="search" aria-label="Filter internships by skill" placeholder="Python, UX, CRM..." />
+                    </label>
+                  </div>
+                  <div class="discovery-controls">
+                    <div class="chip-row" id="categoryChips">
+                      <button class="filter-chip is-active" data-category="all" type="button">All</button>
+                      <button class="filter-chip" data-category="tech" type="button">Tech</button>
+                      <button class="filter-chip" data-category="business" type="button">Business</button>
+                      <button class="filter-chip" data-category="data" type="button">Data</button>
+                      <button class="filter-chip" data-category="sustainability" type="button">Sustainability</button>
+                      <button class="filter-chip" data-category="engineering" type="button">Engineering</button>
+                      <button class="filter-chip" data-category="design" type="button">Design</button>
+                      <button class="filter-chip" data-category="marketing" type="button">Marketing</button>
+                      <button class="filter-chip" data-category="healthcare" type="button">Healthcare</button>
+                      <button class="filter-chip" data-category="finance" type="button">Finance</button>
+                    </div>
+                    <div class="mode-switch" id="searchModeSwitch" aria-label="Search mode">
+                      <button class="is-active" data-mode="recommended" type="button">AI Recommended</button>
+                      <button data-mode="search" type="button">Search All Sources</button>
+                    </div>
+                  </div>
+                </div>
+                <div class="hero-score">
+                  <span>Best match</span>
+                  <strong id="bestMatchScore">0%</strong>
+                </div>
+                <div class="live-ai-panel" id="liveAiPanel"></div>
+                <div class="match-list" id="studentMatches"></div>
+              </section>
+
+              <section class="panel">
+                <div class="panel-header">
+                  <div>
+                    <p class="eyebrow">Match Detail</p>
+                    <h2>Selected internship</h2>
+                  </div>
+                </div>
+                <div id="matchDetail"></div>
+              </section>
+
+              <section class="panel">
+                <div class="panel-header">
+                  <div>
+                    <p class="eyebrow">Skill Gap Analysis</p>
+                    <h2>Skill Gaps</h2>
+                  </div>
+                </div>
+                <div id="skillGapPanel"></div>
+              </section>
+
+              <section class="panel">
+                <div class="panel-header">
+                  <div>
+                    <p class="eyebrow">Application Tracker</p>
+                    <h2>Pipeline timeline</h2>
+                  </div>
+                </div>
+                <div id="applicationTracker"></div>
+              </section>
+
+              <section class="panel">
+                <div class="panel-header">
+                  <div>
+                    <p class="eyebrow">Application Detail</p>
+                    <h2>Selected application</h2>
+                  </div>
+                </div>
+                <div id="applicationDetail"></div>
+              </section>
+
+            </div>
+          </section>
+
+          <section class="dashboard-view recruiter-workspace" id="companyView">
+            <div class="view-intro">
+              <div>
+                <p class="eyebrow">Recruiter workspace</p>
+                <h2 id="recruiterGreeting">Good morning</h2>
+                <p class="view-copy">Here is what needs your attention today.</p>
+              </div>
+              <button class="primary-action" id="createPostingButton" type="button"><i data-lucide="plus"></i>Create internship</button>
+            </div>
+
+            <div class="metrics-row recruiter-metrics-row">
+              <article class="metric-card recruiter-kpi-card">
+                <span class="metric-icon metric-icon-violet" aria-hidden="true"><i data-lucide="briefcase-business"></i></span>
+                <span>Active internships</span>
+                <strong id="recruiterOpenRoles">0</strong>
+                <p id="recruiterOpenRolesMeta">Ready to attract candidates</p>
+              </article>
+              <article class="metric-card recruiter-kpi-card">
+                <span class="metric-icon metric-icon-blue" aria-hidden="true"><i data-lucide="file-text"></i></span>
+                <span>New applications</span>
+                <strong id="recruiterApplicationCount">0</strong>
+                <p id="recruiterApplicationMeta">Awaiting review</p>
+              </article>
+              <article class="metric-card recruiter-kpi-card">
+                <span class="metric-icon metric-icon-green" aria-hidden="true"><i data-lucide="target"></i></span>
+                <span>Strong matches</span>
+                <strong id="recruiterTopCandidate">0%</strong>
+                <p id="recruiterTopCandidateMeta">Best candidate fit</p>
+              </article>
+              <article class="metric-card recruiter-kpi-card">
+                <span class="metric-icon metric-icon-amber" aria-hidden="true"><i data-lucide="calendar-check"></i></span>
+                <span>Interviews</span>
+                <strong id="recruiterPipelineCount">0</strong>
+                <p id="recruiterPipelineMeta">Currently in progress</p>
+              </article>
+            </div>
+
+            <section class="panel recruiter-attention-panel" id="recruiterAttentionSection">
+              <div class="panel-header"><div><p class="eyebrow">Priority queue</p><h2>Needs your attention</h2></div></div>
+              <div class="recruiter-attention-grid" id="recruiterAttention"></div>
+            </section>
+
+            <section class="panel recruiter-postings-overview" id="recruiterPostingsSection">
+              <div class="panel-header"><div><p class="eyebrow">Manage openings</p><h2>Active internships</h2></div><button class="secondary-action compact" id="viewAllPostings" type="button">View all</button></div>
+              <div class="recruiter-posting-grid" id="recruiterPostingCards"></div>
+            </section>
+
+            <div class="dashboard-grid recruiter-grid">
+              <section class="panel profile-panel recruiter-posting-panel">
+                <div class="panel-header">
+                  <div>
+                    <p class="eyebrow">Posting Tool</p>
+                    <h2>My internships</h2>
+                  </div>
+                  <select id="internshipSelect" aria-label="Internship listing"></select>
+                </div>
+                <div id="internshipProfile"></div>
+                <form class="data-form compact-form" id="internshipForm">
+                  <div class="form-title"><strong id="postingFormTitle">Edit posting</strong></div>
+                  <label>Role title<input name="title" required placeholder="AI Product Intern" /></label>
+                  <label>Company<input name="company" required placeholder="FHNW Partner AG" /></label>
+                  <div class="form-grid">
+                    <label>Location<input name="location" required placeholder="Basel" /></label>
+                    <label>
+                      Mode
+                      <select name="mode">
+                        <option>Hybrid</option>
+                        <option>Remote</option>
+                        <option>On-site</option>
+                      </select>
+                    </label>
+                  </div>
+                  <label>Starts<input name="starts" required placeholder="August 2026" /></label>
+                  <label>Required skills<input name="required" required placeholder="Python, SQL, AI" /></label>
+                  <label>Preferred qualifications<input name="preferred" required placeholder="Power BI, Presentation" /></label>
+                  <label>Focus areas<input name="interests" required placeholder="ai, consulting" /></label>
+                  <div class="button-row">
+                    <button class="primary-action" id="internshipSubmit" type="submit">Publish internship</button>
+                    <button class="secondary-action" id="newInternship" type="button">Save draft</button>
+                  </div>
+                </form>
+              </section>
+
+              <section class="panel hero-panel" id="recruiterCandidatesSection">
+                <div>
+                  <p class="eyebrow">Candidate Matching</p>
+                  <h2>Top candidate matches</h2>
+                </div>
+                <div class="recruiter-filter-row">
+                  <label><span>Skills</span><input id="candidateSkillFilter" type="search" placeholder="Python, SQL..." /></label>
+                  <label><span>Location</span><select id="candidateLocationFilter"><option value="all">All locations</option></select></label>
+                  <label><span>Match score</span><select id="candidateScoreFilter"><option value="0">Any score</option><option value="60">60%+</option><option value="75">75%+</option><option value="85">85%+</option></select></label>
+                </div>
+                <div class="match-list" id="candidateMatches"></div>
+              </section>
+
+              <section class="panel recruiter-candidate-profile">
+                <div class="panel-header">
+                  <div>
+                    <p class="eyebrow">Candidate Profile View</p>
+                    <h2>Profile</h2>
+                  </div>
+                </div>
+                <div id="candidateSummary"></div>
+              </section>
+
+              <section class="panel recruiter-applications-panel" id="recruiterApplicationsSection">
+                <div class="panel-header">
+                  <div>
+                    <p class="eyebrow">Application Review</p>
+                    <h2>Submitted applications</h2>
+                  </div>
+                </div>
+                <div id="recruiterApplications"></div>
+              </section>
+
+              <section class="panel cv-review-panel">
+                <div class="panel-header">
+                  <div>
+                    <p class="eyebrow">CV Review</p>
+                    <h2>CV</h2>
+                  </div>
+                </div>
+                <div id="cvReviewPanel"></div>
+                <form class="data-form compact-form" id="recruiterNotesForm">
+                  <div class="form-title">
+                    <strong>Recruiter notes</strong>
+                  </div>
+                  <label>
+                    Notes
+                    <textarea id="recruiterNotesInput" name="notes" rows="5" placeholder="Add interview notes, concerns, strengths, and follow-up items."></textarea>
+                  </label>
+                  <div class="button-row">
+                    <button class="primary-action" id="saveRecruiterNotes" type="submit">Save notes</button>
+                  </div>
+                </form>
+              </section>
+
+              <section class="panel recruiter-pipeline-panel" id="recruiterPipelineSection">
+                <div class="panel-header">
+                  <div>
+                    <p class="eyebrow">Hiring Pipeline</p>
+                    <h2>Recruiter kanban</h2>
+                  </div>
+                </div>
+                <div class="kanban" id="hiringPipeline"></div>
+              </section>
+
+              <section class="panel recruiter-company-panel" id="companyProfileSection">
+                <div class="panel-header"><div><p class="eyebrow">Company identity</p><h2>Company profile</h2></div></div>
+                <div id="companyProfileSummary"></div>
+                <form class="data-form compact-form" id="companyProfileForm">
+                  <label>Company name<input name="name" required /></label>
+                  <div class="form-grid"><label>Industry<input name="industry" required /></label><label>Location<input name="location" required /></label></div>
+                  <label>Website<input name="website" type="url" placeholder="https://company.example" /></label>
+                  <label>Career page<input name="careerPage" type="url" placeholder="https://company.example/careers" /></label>
+                  <label>Company description<textarea name="description" rows="4"></textarea></label>
+                  <p class="form-help">Company details are shown on every owned internship.</p>
+                  <button class="primary-action" type="submit">Save company profile</button>
+                </form>
+              </section>
+
+              <section class="panel recruiter-activity-panel" id="recruiterActivitySection">
+                <div class="panel-header"><div><p class="eyebrow">Messages &amp; activity</p><h2>Recent activity</h2></div></div>
+                <div id="recruiterActivity"></div>
+              </section>
+
+            </div>
+          </section>
+
+          <section class="dashboard-view" id="adminView">
+            <div class="view-intro">
+              <div>
+                <p class="eyebrow">Admin</p>
+                <h2>Dashboard</h2>
+              </div>
+            </div>
+            <div class="admin-grid">
+              <section class="panel wide-panel">
+                <div class="panel-header">
+                  <div>
+                    <p class="eyebrow">System</p>
+                    <h2>Platform overview</h2>
+                  </div>
+                  <button class="secondary-action compact" id="resetData" type="button">Reset data</button>
+                </div>
+                <div class="logic-flow">
+                  <div><span>Profiles</span><strong>Students</strong></div>
+                  <div><span>Listings</span><strong>Internships</strong></div>
+                  <div><span>Matching</span><strong>Scoring</strong></div>
+                  <div><span>Pipeline</span><strong>Applications</strong></div>
+                  <div><span>Ops</span><strong>Admin</strong></div>
+                </div>
+              </section>
+
+              <article class="stat-card"><span>Students</span><strong id="studentCount">0</strong></article>
+              <article class="stat-card"><span>Internships</span><strong id="internshipCount">0</strong></article>
+              <article class="stat-card"><span>Applications</span><strong id="applicationCount">0</strong></article>
+              <article class="stat-card"><span>Notifications</span><strong id="notificationCount">0</strong></article>
+
+              <section class="panel">
+                <div class="panel-header">
+                  <div>
+                    <p class="eyebrow">Sources</p>
+                    <h2>Distribution</h2>
+                  </div>
+                </div>
+                <div id="sourceDistribution"></div>
+              </section>
+
+              <section class="panel">
+                <div class="panel-header">
+                  <div>
+                    <p class="eyebrow">Freshness</p>
+                    <h2>Collection status</h2>
+                  </div>
+                </div>
+                <div id="freshnessPanel"></div>
+              </section>
+
+              <section class="panel">
+                <div class="panel-header">
+                  <div>
+                    <p class="eyebrow">Deduplication</p>
+                    <h2>Duplicate tracking</h2>
+                  </div>
+                </div>
+                <div id="dedupePanel"></div>
+              </section>
+
+              <div class="admin-side-stack">
+                <article class="stat-card"><span>Avg. score</span><strong id="averageScore">0%</strong></article>
+
+                <section class="panel">
+                  <div class="panel-header">
+                    <div>
+                      <p class="eyebrow">Notifications</p>
+                      <h2>Recent activity</h2>
+                    </div>
+                  </div>
+                  <div id="notificationsPanel"></div>
+                </section>
+
+                <section class="panel">
+                  <div class="panel-header">
+                    <div>
+                      <p class="eyebrow">Demand</p>
+                      <h2>Skill signal</h2>
+                    </div>
+                  </div>
+                  <div id="skillDemand"></div>
+                </section>
+              </div>
+
+              <section class="panel wide-panel">
+                <div class="panel-header">
+                  <div>
+                    <p class="eyebrow">Queue</p>
+                    <h2>Posting review</h2>
+                  </div>
+                </div>
+                <div id="approvalQueue"></div>
+              </section>
+            </div>
+          </section>
+        </main>
+      </div>
+    </div>
+
+    <div class="account-settings-backdrop" id="accountSettingsBackdrop" hidden>
+      <section class="account-settings-panel" role="dialog" aria-modal="true" aria-labelledby="accountSettingsTitle">
+        <div class="account-settings-head"><div><p class="eyebrow">Account</p><h2 id="accountSettingsTitle">Account Settings</h2></div><button class="icon-close" id="closeAccountSettings" type="button" aria-label="Close settings">×</button></div>
+        <div class="account-settings-summary"><span class="account-avatar"><img id="settingsAvatarImage" src="public/avatars/default-student.png" alt="Student profile photo" onerror="this.hidden=true;this.nextElementSibling.style.display='grid'"><span id="settingsAvatar">LY</span></span><div><strong id="settingsName">Your profile</strong><p id="settingsEmail">Not signed in</p></div></div>
+        <div class="account-settings-actions"><button class="secondary-action" data-settings-scroll="studentProfilePanel" type="button">Edit profile</button><button class="secondary-action" data-settings-scroll="studentForm" type="button">Edit preferences</button></div>
+      </section>
+    </div>
+
+    <script>
+      (() => {
+        const LANGUAGE_KEY = "fhnwUiLanguage";
+        const API_ROOT = window.FHNW_API_BASE_URL;
+        const textMap = {
+          en: {
+            language: "EN / DE",
+            topTitle: "Internships",
+            dashboard: "Dashboard",
+            recruiter: "Recruiter",
+            admin: "Admin",
+            logout: "Logout",
+            signIn: "Sign in",
+            createAccount: "Create account",
+            platformOverview: "Platform overview",
+            distribution: "Distribution",
+            collectionStatus: "Collection status",
+            duplicateTracking: "Duplicate tracking",
+            recentActivity: "Recent activity",
+            skillSignal: "Skill signal",
+            postingReview: "Posting review",
+            darkMode: "Dark mode",
+            lightMode: "Light mode",
+            signedIn: "Signed in successfully.",
+            created: "Account created successfully.",
+          },
+          de: {
+            language: "DE / EN",
+            topTitle: "Praktika",
+            dashboard: "Übersicht",
+            recruiter: "Recruiter",
+            admin: "Admin",
+            logout: "Abmelden",
+            signIn: "Anmelden",
+            createAccount: "Konto erstellen",
+            platformOverview: "Plattformübersicht",
+            distribution: "Verteilung",
+            collectionStatus: "Aktualitätsstatus",
+            duplicateTracking: "Duplikaterkennung",
+            recentActivity: "Letzte Aktivität",
+            skillSignal: "Skillsignal",
+            postingReview: "Freigabeübersicht",
+            darkMode: "Dunkler Modus",
+            lightMode: "Heller Modus",
+            signedIn: "Erfolgreich angemeldet.",
+            created: "Konto erfolgreich erstellt.",
+          },
+        };
+
+        function currentCopy() {
+          return textMap[document.documentElement.lang === "de" ? "de" : "en"] || textMap.en;
+        }
+
+        function setText(selector, value) {
+          const node = document.querySelector(selector);
+          if (node) node.textContent = value;
+        }
+
+        function applyLanguage(lang) {
+          const copy = textMap[lang] || textMap.en;
+          document.documentElement.lang = lang;
+          setText("#languageToggle", copy.language);
+          setText(".topbar h1", copy.topTitle);
+          setText("#studentNavButton span:last-child", copy.dashboard);
+          setText("#recruiterNavButton span:last-child", copy.dashboard);
+          setText("#adminNavButton", copy.admin);
+          setText("#logoutButton", copy.logout);
+          setText("#authFaceLogin h2", copy.signIn);
+          setText("#authFaceRegister h2", copy.createAccount);
+          setText("#studentView .view-intro h2", copy.dashboard);
+          setText("#adminView .view-intro h2", copy.dashboard);
+          setText("#adminView .wide-panel:first-of-type .panel-header h2", copy.platformOverview);
+          setText("#adminView .panel:nth-of-type(2) .panel-header h2", copy.distribution);
+          setText("#adminView .panel:nth-of-type(3) .panel-header h2", copy.collectionStatus);
+          setText("#adminView .panel:nth-of-type(4) .panel-header h2", copy.duplicateTracking);
+          setText("#adminView .admin-side-stack .panel:nth-of-type(1) .panel-header h2", copy.recentActivity);
+          setText("#adminView .admin-side-stack .panel:nth-of-type(2) .panel-header h2", copy.skillSignal);
+          setText("#adminView .wide-panel:last-of-type .panel-header h2", copy.postingReview);
+          const themeToggle = document.querySelector("#themeToggle");
+          if (themeToggle) {
+            themeToggle.textContent = document.body.classList.contains("dark") ? copy.lightMode : copy.darkMode;
+          }
+        }
+
+        function setAuthMode(mode) {
+          const authCard = document.getElementById("authCard");
+          const loginFace = document.getElementById("authFaceLogin");
+          const registerFace = document.getElementById("authFaceRegister");
+          const isRegister = mode === "register";
+          if (authCard) authCard.classList.toggle("is-register", isRegister);
+          if (loginFace) {
+            loginFace.classList.toggle("is-inactive", isRegister);
+            loginFace.toggleAttribute("inert", isRegister);
+            loginFace.setAttribute("aria-hidden", isRegister ? "true" : "false");
+          }
+          if (registerFace) {
+            registerFace.classList.toggle("is-inactive", !isRegister);
+            registerFace.toggleAttribute("inert", !isRegister);
+            registerFace.setAttribute("aria-hidden", isRegister ? "false" : "true");
+          }
+          const next = new URL(window.location.href);
+          next.searchParams.set("route", isRegister ? "/register" : "/login");
+          window.history.replaceState({}, "", next);
+        }
+
+        function showFeedback(message, type) {
+          const banner = document.getElementById("feedbackBanner");
+          if (!banner) return;
+          banner.textContent = message;
+          banner.classList.remove("is-hidden", "is-success", "is-error", "is-info");
+          banner.classList.add(type === "success" ? "is-success" : type === "error" ? "is-error" : "is-info");
+          window.clearTimeout(window.__fhnwFallbackFeedbackTimer);
+          window.__fhnwFallbackFeedbackTimer = window.setTimeout(() => {
+            banner.classList.add("is-hidden");
+            banner.classList.remove("is-success", "is-error", "is-info");
+            banner.textContent = "";
+          }, 3800);
+        }
+
+        function abortAfter(timeoutMs = 8000) {
+          const controller = new AbortController();
+          const timer = window.setTimeout(() => controller.abort(), timeoutMs);
+          return {
+            signal: controller.signal,
+            cancel: () => window.clearTimeout(timer),
+          };
+        }
+
+        async function request(path, options = {}) {
+          const timeout = abortAfter();
+          try {
+            const response = await fetch(`${API_ROOT}${path}`, {
+              ...options,
+              signal: timeout.signal,
+              headers: {
+                "Content-Type": "application/json",
+                ...(options.headers || {}),
+              },
+            });
+            const payload = await response.json().catch(() => null);
+            if (!response.ok) throw new Error(payload?.error?.message || payload?.error || `Request failed (${response.status})`);
+            return payload;
+          } catch (error) {
+            if (error && error.name === "AbortError") {
+              throw new Error("The backend is not responding on port 4000.");
+            }
+            throw error;
+          } finally {
+            timeout.cancel();
+          }
+        }
+
+        async function createBootstrapData(user, fullName, email) {
+          const [firstName, ...rest] = (fullName || "").trim().split(/\s+/).filter(Boolean);
+          const lastName = rest.join(" ") || (user.role === "student" ? "Student" : "Recruiter");
+          const token = localStorage.getItem("fhnwAuthToken") || "";
+          const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
+
+          if (user.role === "student") {
+            await request("/students", {
+              method: "POST",
+              headers: authHeaders,
+              body: JSON.stringify({
+                userId: user.id,
+                firstName: firstName || "FHNW",
+                lastName,
+                degreeProgram: "BSc Business Information Technology",
+                semester: 1,
+                locationPreference: "Zurich",
+                industryPreference: "AI, Finance, Consulting",
+                availability: new Date(Date.now() + 45 * 24 * 60 * 60 * 1000).toISOString(),
+                cvSummary: "New FHNW student profile created from the registration card.",
+                skills: [],
+                projects: [],
+                languages: ["English"],
+                mode: "Hybrid",
+              }),
+            });
+            return;
+          }
+
+          const companyName = firstName ? `${firstName} Talent Studio` : "Lycan Talent Studio";
+          const company = await request("/companies", {
+            method: "POST",
+            headers: authHeaders,
+            body: JSON.stringify({
+              name: companyName,
+              email,
+              industry: "Technology",
+              location: "Zurich",
+              description: "Recruiter account created from the registration card.",
+            }),
+          });
+          await request("/recruiters", {
+            method: "POST",
+            headers: authHeaders,
+            body: JSON.stringify({
+              userId: user.id,
+              companyId: company.id,
+              firstName: firstName || "Lycan",
+              lastName,
+              role: "Recruiter",
+            }),
+          });
+        }
+
+        function routeForRole(role) {
+          if (role === "recruiter") return "/recruiter";
+          if (role === "admin") return "/admin";
+          return "/student";
+        }
+
+        function setButtonBusy(button, label) {
+          if (!button) return () => {};
+          const original = button.dataset.originalLabel || button.textContent;
+          button.dataset.originalLabel = original;
+          button.disabled = true;
+          button.textContent = label;
+          return () => {
+            button.disabled = false;
+            button.textContent = original;
+          };
+        }
+
+        async function submitLogin(event, sourceButton) {
+          if (event) event.preventDefault();
+          if (window.__fhnwFallbackBusy) return false;
+          const form = document.getElementById("loginForm");
+          if (!form) return false;
+          if (typeof form.reportValidity === "function" && !form.reportValidity()) return false;
+          window.__fhnwFallbackBusy = true;
+          const submitButton = sourceButton || document.getElementById("loginSubmitButton");
+          const restore = setButtonBusy(submitButton, document.documentElement.lang === "de" ? "Anmelden..." : "Signing in...");
+          try {
+            const data = new FormData(form);
+            const response = await request("/auth/login", {
+              method: "POST",
+              body: JSON.stringify({
+                email: String(data.get("email") || "").trim(),
+                password: String(data.get("password") || ""),
+              }),
+            });
+            localStorage.setItem("fhnwAuthToken", response.token);
+            window.location.href = `./index.html?route=${encodeURIComponent(routeForRole(response.user.role))}`;
+            showFeedback(currentCopy().signedIn, "success");
+          } catch (error) {
+            showFeedback((error && error.message) || "Unable to sign in.", "error");
+          } finally {
+            window.__fhnwFallbackBusy = false;
+            restore();
+          }
+          return false;
+        }
+
+        async function submitRegister(event, sourceButton) {
+          if (event) event.preventDefault();
+          if (window.__fhnwFallbackBusy) return false;
+          const form = document.getElementById("registerForm");
+          if (!form) return false;
+          if (typeof form.reportValidity === "function" && !form.reportValidity()) return false;
+          window.__fhnwFallbackBusy = true;
+          const submitButton = sourceButton || document.getElementById("registerSubmitButton");
+          const restore = setButtonBusy(submitButton, document.documentElement.lang === "de" ? "Erstellen..." : "Creating...");
+          try {
+            const data = new FormData(form);
+            const email = String(data.get("email") || "").trim();
+            const role = String(data.get("role") || "student");
+            const name = String(data.get("name") || "").trim();
+            const response = await request("/auth/register", {
+              method: "POST",
+              body: JSON.stringify({
+                email,
+                password: String(data.get("password") || ""),
+                role,
+              }),
+            });
+            localStorage.setItem("fhnwAuthToken", response.token);
+            await createBootstrapData(response.user, name, email);
+            window.location.href = `./index.html?route=${encodeURIComponent(routeForRole(response.user.role))}`;
+            showFeedback(currentCopy().created, "success");
+          } catch (error) {
+            showFeedback((error && error.message) || "Unable to create account.", "error");
+          } finally {
+            window.__fhnwFallbackBusy = false;
+            restore();
+          }
+          return false;
+        }
+
+        function bindAuthFallback() {
+          if (window.__fhnwAuthFallbackBound) return;
+          window.__fhnwAuthFallbackBound = true;
+
+          document.getElementById("openLogin")?.addEventListener("click", () => setAuthMode("login"));
+          document.getElementById("openRegister")?.addEventListener("click", () => setAuthMode("register"));
+          document.getElementById("showLoginCard")?.addEventListener("click", () => setAuthMode("login"));
+          document.getElementById("showRegisterCard")?.addEventListener("click", () => setAuthMode("register"));
+
+          window.submitLoginForm = submitLogin;
+          window.submitRegisterForm = submitRegister;
+          document.getElementById("loginForm").onsubmit = submitLogin;
+          document.getElementById("registerForm").onsubmit = submitRegister;
+        }
+
+        window.toggleAppLanguage = function toggleAppLanguage() {
+          const next = document.documentElement.lang === "de" ? "en" : "de";
+          try {
+            localStorage.setItem(LANGUAGE_KEY, next);
+          } catch {}
+          applyLanguage(next);
+        };
+
+        let stored = "en";
+        try {
+          stored = localStorage.getItem(LANGUAGE_KEY) || "en";
+        } catch {}
+        applyLanguage(stored === "de" ? "de" : "en");
+        const route = new URLSearchParams(window.location.search).get("route");
+        setAuthMode(route === "/register" ? "register" : "login");
+        bindAuthFallback();
+      })();
+    </script>
+    <script src="lucide-icons.js"></script>
+    <script type="module" src="app.js?v=20260919-recruiter"></script>
+  </body>
+</html>

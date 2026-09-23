@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: lycan-postgres
+    environment:
+      POSTGRES_DB: lycan_matcher
+      POSTGRES_USER: lycan
+      POSTGRES_PASSWORD: lycan_local_only
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lycan -d lycan_matcher"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - lycan-postgres-data:/var/lib/postgresql/data
+
+volumes:
+  lycan-postgres-data:
