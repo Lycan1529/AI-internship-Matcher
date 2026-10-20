@@ -13,6 +13,7 @@ import { notificationRouter } from "./routes/notifications.js";
 import { recommendationRouter } from "./routes/recommendations.js";
 import { cvRouter } from "./routes/cv.js";
 import { adminRouter } from "./routes/admin.js";
+import { profileRouter } from "./routes/profile.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { prisma } from "./db.js";
 import { assertRuntimeConfig, config } from "./config.js";
@@ -55,6 +56,7 @@ export function createApp() {
   app.use("/api/notifications", notificationRouter);
   app.use("/api/recommendations", recommendationRouter);
   app.use("/api/cv", cvRouter);
+  app.use("/api/profile", profileRouter);
   app.use("/api/admin", adminRouter);
   app.use(errorHandler);
   return app;

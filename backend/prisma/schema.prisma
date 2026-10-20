@@ -68,6 +68,7 @@ model StudentProfile {
   availability       DateTime?
   cvUrl              String?
   cvSummary          String?
+  avatarUrl          String?
   cvDocuments        CVDocument[]
   createdAt          DateTime              @default(now())
   updatedAt          DateTime              @updatedAt
@@ -85,6 +86,9 @@ model Company {
   industry           String?
   location           String?
   description        String?
+  website            String?
+  careerPage         String?
+  logoUrl            String?
   createdAt          DateTime     @default(now())
   updatedAt          DateTime     @updatedAt
   recruiters         Recruiter[]

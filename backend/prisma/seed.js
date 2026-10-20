@@ -352,6 +352,9 @@ async function resetDatabase() {
 }
 
 async function main() {
+  if (process.env.NODE_ENV === "production" && process.env.SEED_DEMO_DATA !== "true") {
+    throw new Error("Refusing to replace production data. Set SEED_DEMO_DATA=true only for an empty demo database.");
+  }
   await resetDatabase();
 
   const passwordHash = await bcrypt.hash("Password123!", 10);

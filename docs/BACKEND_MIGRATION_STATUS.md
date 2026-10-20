@@ -1,6 +1,6 @@
 # Backend Migration Status
 
-The Express and Prisma backend is the canonical production target. The Python server remains a temporary compatibility fixture only until PostgreSQL is configured and the Express workflow suite runs against it.
+The Express and Prisma backend is the canonical production target. The browser client already uses the API contract. The Python server is a temporary compatibility fixture for the local presentation dataset until PostgreSQL is configured and the Express workflow suite runs against it.
 
 | Python mock API | Express route | Status |
 | --- | --- | --- |
@@ -14,6 +14,7 @@ The Express and Prisma backend is the canonical production target. The Python se
 | `GET/PUT /api/notifications*` | `/api/notifications/*` | Implemented; ownership checks added; database verification pending |
 | `GET /api/recommendations/:studentId` | `/api/recommendations/:studentId` | Implemented; student ownership check added; database verification pending |
 | `POST /api/cv/upload`, `POST /api/cv/parse` | `/api/cv/*` | Implemented; PDF validation, ownership, and delete support added; database verification pending |
+| `POST /api/profile/avatar` | `/api/profile/avatar` | Implemented; authenticated image upload and profile persistence; database verification pending |
 | `GET /api/admin/*` | `/api/admin/*` | Implemented; live analytics queries added; database verification pending |
 
 ## Temporary Python Server Policy
@@ -22,4 +23,4 @@ The Express and Prisma backend is the canonical production target. The Python se
 
 ## Current Blocker
 
-Node.js LTS, dependencies, Prisma Client generation, the production build, and the database-independent API test suite are working locally. A PostgreSQL `DATABASE_URL` and `JWT_SECRET` are still required before the first migration, seed, and end-to-end database workflow can run. `docker-compose.yml` provides an optional local PostgreSQL service for machines with Docker Desktop installed.
+Node.js LTS, dependencies, Prisma Client generation, the production build, initial committed migration, and the database-independent API test suite are working locally. A PostgreSQL `DATABASE_URL`, `JWT_SECRET`, and deployed frontend origin are still required before an end-to-end production workflow can run. `docker-compose.yml` provides an optional local PostgreSQL service for machines with Docker Desktop installed.

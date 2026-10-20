@@ -222,7 +222,7 @@ stateDiagram-v2
 
 ## Current Features Already Implemented
 
-### Frontend Prototype
+### Product Workspace
 
 - public landing page
 - login and register demo flows
@@ -300,6 +300,10 @@ The backend is structured around REST endpoints.
 
 - `POST /api/cv/upload`
 - `POST /api/cv/parse`
+
+### Profile Media
+
+- `POST /api/profile/avatar`
 
 ### Admin
 
@@ -384,7 +388,14 @@ sequenceDiagram
 
 ### Frontend Prototype
 
-Open the frontend entry file directly, or run the local demo server already used during development.
+Run the frontend and API together for normal development:
+
+```bash
+npm install
+npm run dev
+```
+
+The browser client is API-driven. The Python compatibility service remains available for the existing presentation dataset while PostgreSQL is being configured.
 
 - root redirect page: [index.html](/Users/lycan/Documents/Codex/2026-04-21-ai-internship-matching-platform-fhnw-version/index.html)
 - main frontend page: [frontend/index.html](/Users/lycan/Documents/Codex/2026-04-21-ai-internship-matching-platform-fhnw-version/frontend/index.html)
@@ -403,7 +414,7 @@ npm run dev
 
 Default backend URL:
 
-- `http://localhost:4000`
+- `http://localhost:4000/api`
 
 ## Recommended Environment Variables
 
@@ -418,16 +429,16 @@ Default backend URL:
 
 These should stay in backend configuration only and should not be exposed in frontend code.
 
-## Migration Path
+## Deployment Path
 
-The current UI still uses `localStorage` for prototype persistence. The intended migration path is:
+The frontend is already wired to the API client for authentication, profiles, internships, applications, notifications, recruiter workflows, and CV actions. The final infrastructure switch is from the local compatibility data store to PostgreSQL through Express and Prisma.
 
-1. replace local internship loading with API-based internship retrieval
-2. replace local application saving with backend application creation
-3. connect notifications to backend state
-4. connect recruiter status updates to the API
-5. replace simulated recommendation logic with backend-generated recommendations
-6. add authentication and protected user sessions
+1. create an empty PostgreSQL database in Neon or Supabase
+2. set `DATABASE_URL`, `JWT_SECRET`, and the deployed `FRONTEND_ORIGIN`
+3. deploy the API with Render using `render.yaml`; migrations run on startup
+4. set `FRONTEND_API_URL` in Vercel and deploy the static frontend
+5. seed only an empty demonstration database using `SEED_DEMO_DATA=true`
+6. verify the core login, application, notification, recruiter, and CV flows against the deployed services
 
 ## Academic / Presentation Value
 

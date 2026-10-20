@@ -17,6 +17,7 @@ export function assertRuntimeConfig() {
   const missing = [
     !process.env.DATABASE_URL && "DATABASE_URL",
     !process.env.JWT_SECRET && "JWT_SECRET",
+    process.env.NODE_ENV === "production" && !process.env.FRONTEND_ORIGIN && "FRONTEND_ORIGIN",
   ].filter(Boolean);
   if (missing.length) {
     throw new Error(`Missing required environment variables: ${missing.join(", ")}`);

@@ -12,6 +12,9 @@ const companySchema = z.object({
   industry: z.string().optional(),
   location: z.string().optional(),
   description: z.string().optional(),
+  website: z.string().url().optional().or(z.literal("")),
+  careerPage: z.string().url().optional().or(z.literal("")),
+  logoUrl: z.string().url().optional().or(z.literal("")),
 });
 
 companyRouter.get("/", requireAuth, requireRole("admin", "recruiter"), async (_req, res) => {

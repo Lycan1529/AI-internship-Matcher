@@ -4,6 +4,7 @@ import { prisma } from "../db.js";
 import { requireAuth, requireRole } from "../middleware/auth.js";
 import { createNotification } from "../services/notificationService.js";
 import { canTransitionApplication } from "../services/applicationLifecycle.js";
+import { httpError } from "../middleware/errorHandler.js";
 
 export const applicationRouter = Router();
 

@@ -10,6 +10,7 @@
     "build": "npm run build:frontend && npm --prefix backend run prisma:generate",
     "build:frontend": "node scripts/configure-frontend.mjs",
     "db:migrate": "npm --prefix backend run prisma:migrate",
+    "db:migrate:deploy": "npm --prefix backend run prisma:migrate:deploy",
     "db:seed": "npm --prefix backend run seed"
   },
   "devDependencies": {
