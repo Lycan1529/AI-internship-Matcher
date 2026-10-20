@@ -15,7 +15,7 @@ The Express and Prisma backend is the canonical production target. The browser c
 | `GET /api/recommendations/:studentId` | `/api/recommendations/:studentId` | Implemented; student ownership check added; database verification pending |
 | `POST /api/cv/upload`, `POST /api/cv/parse` | `/api/cv/*` | Implemented; PDF validation, ownership, and delete support added; database verification pending |
 | `POST /api/profile/avatar` | `/api/profile/avatar` | Implemented; authenticated image upload and profile persistence; database verification pending |
-| `GET /api/admin/*` | `/api/admin/*` | Implemented; live analytics queries added; database verification pending |
+| `GET /api/admin/*` | `/api/admin/*` | Implemented; admin bootstrap, user suspension, company verification, listing moderation, audit logs, matching telemetry, and live analytics added; database verification pending |
 
 ## Temporary Python Server Policy
 

@@ -408,6 +408,7 @@ async function main() {
       industry: recruiterCompanySeed.industry,
       location: recruiterCompanySeed.location,
       description: recruiterCompanySeed.description,
+      verificationStatus: "verified",
     },
   });
 
@@ -449,6 +450,7 @@ async function main() {
           industry: internshipSeed.industry,
           location: internshipSeed.location,
           description: internshipSeed.description,
+          verificationStatus: "verified",
         },
       });
       companyCache.set(company.name, company);

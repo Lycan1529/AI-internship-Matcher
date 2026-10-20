@@ -645,6 +645,24 @@
                 <div id="approvalQueue"></div>
               </section>
             </div>
+
+            <section class="admin-control-center" aria-labelledby="adminControlTitle">
+              <div class="admin-control-heading">
+                <div><p class="eyebrow">Operations</p><h2 id="adminControlTitle">Admin Control Center</h2></div>
+              </div>
+              <nav class="admin-subnav" aria-label="Admin sections">
+                <button class="is-active" data-admin-section="overview" type="button"><i data-lucide="layout-dashboard"></i><span>Overview</span></button>
+                <button data-admin-section="users" type="button"><i data-lucide="users"></i><span>Users</span></button>
+                <button data-admin-section="companies" type="button"><i data-lucide="building-2"></i><span>Companies</span></button>
+                <button data-admin-section="internships" type="button"><i data-lucide="briefcase-business"></i><span>Internships</span></button>
+                <button data-admin-section="matching" type="button"><i data-lucide="brain-circuit"></i><span>AI Matching</span></button>
+                <button data-admin-section="sources" type="button"><i data-lucide="database"></i><span>Job Sources</span></button>
+                <button data-admin-section="analytics" type="button"><i data-lucide="chart-no-axes-combined"></i><span>Analytics</span></button>
+                <button data-admin-section="audit" type="button"><i data-lucide="scroll-text"></i><span>Audit Logs</span></button>
+                <button data-admin-section="settings" type="button"><i data-lucide="settings"></i><span>Settings</span></button>
+              </nav>
+              <div id="adminControlContent" class="admin-control-content" aria-live="polite"></div>
+            </section>
           </section>
         </main>
       </div>

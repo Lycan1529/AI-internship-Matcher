@@ -11,6 +11,7 @@ export async function requireAuth(req, _res, next) {
     const payload = jwt.verify(token, process.env.JWT_SECRET);
     const user = await prisma.user.findUnique({ where: { id: payload.sub } });
     if (!user) throw httpError(401, "User no longer exists");
+    if (user.status === "suspended") throw httpError(403, "This account is suspended", undefined, "ACCOUNT_SUSPENDED");
     req.user = user;
     next();
   } catch (error) {

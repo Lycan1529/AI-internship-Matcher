@@ -72,6 +72,7 @@ Do not put these keys in the frontend.
 ### Internships
 
 - `GET /api/internships`
+- `GET /api/internships/mine` (recruiter or admin)
 - `POST /api/internships`
 - `GET /api/internships/:id`
 
@@ -100,8 +101,43 @@ Do not put these keys in the frontend.
 ### Admin
 
 - `GET /api/admin/stats`
+- `GET /api/admin/overview`
+- `GET /api/admin/users`
+- `PATCH /api/admin/users/:id/status`
+- `GET /api/admin/companies`
+- `GET /api/admin/companies/:id`
+- `POST /api/admin/companies/:id/verify|reject|suspend|restore`
+- `GET /api/admin/internships`
+- `POST /api/admin/internships/:id/moderate`
+- `GET /api/admin/matching/health`
+- `GET /api/admin/matching/metrics`
+- `GET /api/admin/audit-logs`
+- `GET /api/admin/settings`
 - `GET /api/admin/sources`
 - `GET /api/admin/analytics`
+
+## Admin Control Center
+
+Administrative access is intentionally not available through public registration. Create the first administrator with an explicit, one-time bootstrap operation:
+
+```bash
+ADMIN_BOOTSTRAP_TOKEN='a-long-random-token' \
+ADMIN_BOOTSTRAP_AUTHORIZATION='a-long-random-token' \
+ADMIN_BOOTSTRAP_EMAIL='admin@example.com' \
+ADMIN_BOOTSTRAP_PASSWORD='use-a-long-unique-password' \
+npm run bootstrap:admin
+```
+
+The authorization value must exactly match `ADMIN_BOOTSTRAP_TOKEN`. The command will only create or update an existing administrator and refuses to promote an existing non-admin account. Remove the bootstrap values from the deployed environment after provisioning.
+
+The control center supports user suspension, company verification and rejection, internship moderation, matching health inspection, source visibility, and immutable-style audit events. It deliberately reports unavailable ingestion telemetry as unavailable rather than fabricating operational results.
+
+Publication policy:
+
+- only verified companies may publish open internships;
+- new companies default to pending verification;
+- public internship discovery returns only open, active postings from verified companies;
+- recruiters can view their own drafts through `/api/internships/mine`.
 
 ## Production Safeguards
 

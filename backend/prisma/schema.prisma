@@ -13,6 +13,34 @@ enum UserRole {
   admin
 }
 
+enum AccountStatus {
+  active
+  suspended
+}
+
+enum CompanyVerificationStatus {
+  pending
+  verified
+  rejected
+  suspended
+}
+
+enum InternshipModerationStatus {
+  active
+  flagged
+  removed
+}
+
+enum AuditOutcome {
+  success
+  failed
+}
+
+enum MatchingRunStatus {
+  success
+  failed
+}
+
 enum WorkMode {
   remote
   hybrid
@@ -49,10 +77,17 @@ model User {
   email        String          @unique
   passwordHash String
   role         UserRole
+  status       AccountStatus  @default(active)
+  displayName  String?
+  lastActiveAt DateTime?
+  suspendedAt  DateTime?
   createdAt    DateTime        @default(now())
   updatedAt    DateTime        @updatedAt
   student      StudentProfile?
   recruiter    Recruiter?
+  auditLogs    AuditLog[]     @relation("AuditActor")
+  companyReviews Company[]    @relation("CompanyReviewer")
+  moderatedInternships Internship[] @relation("InternshipModerator")
 }
 
 model StudentProfile {
@@ -89,6 +124,12 @@ model Company {
   website            String?
   careerPage         String?
   logoUrl            String?
+  verificationStatus CompanyVerificationStatus @default(pending)
+  verificationNotes  String?
+  rejectionReason    String?
+  reviewedById       String?
+  reviewedBy         User?        @relation("CompanyReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+  reviewedAt         DateTime?
   createdAt          DateTime     @default(now())
   updatedAt          DateTime     @updatedAt
   recruiters         Recruiter[]
@@ -168,6 +209,11 @@ model Internship {
   deadline        DateTime
   status          InternshipStatus             @default(open)
   duplicateKey    String?
+  moderationStatus InternshipModerationStatus @default(active)
+  moderationReason String?
+  moderatedById    String?
+  moderatedBy      User?        @relation("InternshipModerator", fields: [moderatedById], references: [id], onDelete: SetNull)
+  moderatedAt      DateTime?
   createdAt       DateTime                     @default(now())
   updatedAt       DateTime                     @updatedAt
   sources         InternshipSource[]
@@ -259,4 +305,35 @@ model AdminAnalytics {
   totalNotifications Int       @default(0)
   topIndustry        String?
   topLocation        String?
+}
+
+model AuditLog {
+  id         String       @id @default(uuid())
+  actorId    String
+  actor      User         @relation("AuditActor", fields: [actorId], references: [id], onDelete: Restrict)
+  action     String
+  targetType String
+  targetId   String
+  outcome    AuditOutcome @default(success)
+  reason     String?
+  metadata   Json?
+  createdAt  DateTime     @default(now())
+
+  @@index([createdAt])
+  @@index([targetType, targetId])
+  @@index([actorId, createdAt])
+}
+
+model MatchingRun {
+  id               String            @id @default(uuid())
+  status           MatchingRunStatus
+  provider         String
+  algorithmVersion String
+  jobsProcessed    Int               @default(0)
+  durationMs       Int?
+  errorCode        String?
+  createdAt        DateTime          @default(now())
+
+  @@index([createdAt])
+  @@index([status, createdAt])
 }

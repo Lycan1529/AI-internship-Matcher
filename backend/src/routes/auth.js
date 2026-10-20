@@ -11,7 +11,11 @@ export const authRouter = Router();
 const credentialsSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8),
-  role: z.enum(["student", "recruiter", "admin"]).default("student"),
+});
+
+const registrationSchema = credentialsSchema.extend({
+  role: z.enum(["student", "recruiter"]).default("student"),
+  displayName: z.string().trim().min(1).max(120).optional(),
 });
 
 function signToken(user) {
@@ -20,7 +24,7 @@ function signToken(user) {
 
 authRouter.post("/register", async (req, res, next) => {
   try {
-    const input = credentialsSchema.parse(req.body);
+    const input = registrationSchema.parse(req.body);
     const existing = await prisma.user.findUnique({ where: { email: input.email } });
     if (existing) throw httpError(409, "Email is already registered");
 
@@ -29,6 +33,7 @@ authRouter.post("/register", async (req, res, next) => {
         email: input.email,
         passwordHash: await bcrypt.hash(input.password, 10),
         role: input.role,
+        displayName: input.displayName,
       },
       select: { id: true, email: true, role: true },
     });
@@ -40,11 +45,15 @@ authRouter.post("/register", async (req, res, next) => {
 
 authRouter.post("/login", async (req, res, next) => {
   try {
-    const input = credentialsSchema.pick({ email: true, password: true }).parse(req.body);
+    const input = credentialsSchema.parse(req.body);
     const user = await prisma.user.findUnique({ where: { email: input.email } });
     if (!user || !(await bcrypt.compare(input.password, user.passwordHash))) {
       throw httpError(401, "Invalid email or password");
     }
+    if (user.status === "suspended") {
+      throw httpError(403, "This account is suspended", undefined, "ACCOUNT_SUSPENDED");
+    }
+    await prisma.user.update({ where: { id: user.id }, data: { lastActiveAt: new Date() } });
     res.json({
       user: { id: user.id, email: user.email, role: user.role },
       token: signToken(user),

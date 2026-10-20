@@ -19,6 +19,10 @@
     target: '<circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle>',
     "calendar-check": '<path d="M8 2v4M16 2v4M3 10h18"></path><rect width="18" height="18" x="3" y="4" rx="2"></rect><path d="m9 16 2 2 4-4"></path>',
     plus: '<path d="M12 5v14M5 12h14"></path>',
+    "brain-circuit": '<path d="M12 5a3 3 0 1 0-5.5 1.7A3 3 0 0 0 5 12a3 3 0 0 0 1.5 5.3A3 3 0 1 0 12 19"></path><path d="M12 5a3 3 0 1 1 5.5 1.7A3 3 0 0 1 19 12a3 3 0 0 1-1.5 5.3A3 3 0 1 1 12 19M12 5v14M8 9h8M8 15h8"></path>',
+    "chart-no-axes-combined": '<path d="M4 19V5"></path><path d="M4 19h16"></path><path d="m8 15 3-3 3 2 5-6"></path>',
+    "scroll-text": '<path d="M8 3h8"></path><path d="M8 21h8"></path><path d="M12 3v18"></path><path d="M5 7h14M5 17h14"></path>',
+    settings: '<circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.1 2.1-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5v.2h-3v-.2a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1-2.1-2.1.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H5v-3h.2a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1 2.1-2.1.1.1a1.7 1.7 0 0 0 1.9.3 1.7 1.7 0 0 0 1-1.5V4h3v.2a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1 2.1 2.1-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.5 1h.2v3h-.2a1.7 1.7 0 0 0-1.5 1z"></path>',
   };
 
   function iconSvg(name) {

@@ -6,6 +6,7 @@ vi.mock("../src/db.js", () => ({
     user: {
       findUnique: vi.fn(),
       create: vi.fn(),
+      update: vi.fn(),
     },
   },
 }));
@@ -99,6 +100,34 @@ describe("authentication API", () => {
       code: "AUTH_UNAUTHENTICATED",
       message: "Invalid email or password",
     });
+  });
+
+  it("does not allow public registration of an administrator", async () => {
+    const result = await invoke(routeHandler("/register", "post"), {
+      body: { email: "admin@fhnw.ch", password: "password123", role: "admin" },
+    });
+    const response = formatError(result.error);
+
+    expect(response.status).toBe(400);
+    expect(prisma.user.create).not.toHaveBeenCalled();
+  });
+
+  it("blocks login for a suspended account", async () => {
+    prisma.user.findUnique.mockResolvedValue({
+      id: "user-1",
+      email: "student@fhnw.ch",
+      role: "student",
+      passwordHash,
+      status: "suspended",
+    });
+
+    const result = await invoke(routeHandler("/login", "post"), {
+      body: { email: "student@fhnw.ch", password: "password123" },
+    });
+    const response = formatError(result.error);
+
+    expect(response.status).toBe(403);
+    expect(response.body.error.code).toBe("ACCOUNT_SUSPENDED");
   });
 
   it("requires a bearer token for protected requests", async () => {

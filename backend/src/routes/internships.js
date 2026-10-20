@@ -25,6 +25,7 @@ const internshipSchema = z.object({
   deadline: z.string().optional(),
   starts: z.string().optional(),
   duplicateKey: z.string().optional(),
+  status: z.enum(["draft", "open", "closed"]).optional(),
   requiredSkills: z.array(internshipSkillSchema).optional(),
   preferredSkills: z.array(internshipSkillSchema).optional(),
   source: z
@@ -64,15 +65,15 @@ async function resolveCompanyId(req, input) {
   if (req.user.role === "recruiter") {
     const recruiter = await prisma.recruiter.findUnique({
       where: { userId: req.user.id },
-      select: { companyId: true },
+      select: { companyId: true, company: { select: { verificationStatus: true } } },
     });
     if (!recruiter?.companyId) throw httpError(400, "A company profile is required before creating an internship", undefined, "COMPANY_PROFILE_REQUIRED");
     if (input.companyId && input.companyId !== recruiter.companyId) {
       throw httpError(403, "Recruiters can only create internships for their own company", undefined, "AUTH_FORBIDDEN");
     }
-    return recruiter.companyId;
+    return recruiter;
   }
-  if (input.companyId) return input.companyId;
+  if (input.companyId) return { companyId: input.companyId, company: null };
   throw httpError(400, "A company profile is required before creating an internship", undefined, "COMPANY_PROFILE_REQUIRED");
 }
 
@@ -87,17 +88,47 @@ async function assertRecruiterCanManageInternship(user, internshipId) {
 
 internshipRouter.get("/", async (_req, res) => {
   const internships = await prisma.internship.findMany({
-    where: { status: "open" },
+    where: { status: "open", moderationStatus: "active", company: { verificationStatus: "verified" } },
     include: { company: true, sources: true, requirements: { include: { skill: true } } },
     orderBy: { postedDate: "desc" },
   });
   res.json(internships);
 });
 
+internshipRouter.get("/mine", requireAuth, requireRole("recruiter", "admin"), async (req, res, next) => {
+  try {
+    let where = {};
+    if (req.user.role === "recruiter") {
+      const recruiter = await prisma.recruiter.findUnique({
+        where: { userId: req.user.id },
+        select: { companyId: true },
+      });
+      if (!recruiter?.companyId) {
+        throw httpError(400, "A company profile is required before viewing internships", undefined, "COMPANY_PROFILE_REQUIRED");
+      }
+      where = { companyId: recruiter.companyId };
+    }
+
+    const internships = await prisma.internship.findMany({
+      where,
+      include: { company: true, sources: true, requirements: { include: { skill: true } } },
+      orderBy: { postedDate: "desc" },
+    });
+    res.json(internships);
+  } catch (error) {
+    next(error);
+  }
+});
+
 internshipRouter.get("/:id", async (req, res, next) => {
   try {
-    const internship = await prisma.internship.findUniqueOrThrow({
-      where: { id: req.params.id },
+    const internship = await prisma.internship.findFirstOrThrow({
+      where: {
+        id: req.params.id,
+        status: "open",
+        moderationStatus: "active",
+        company: { verificationStatus: "verified" },
+      },
       include: { company: true, sources: true, requirements: { include: { skill: true } } },
     });
     res.json(internship);
@@ -109,13 +140,17 @@ internshipRouter.get("/:id", async (req, res, next) => {
 internshipRouter.post("/", requireAuth, requireRole("recruiter", "admin"), async (req, res, next) => {
   try {
     const input = internshipSchema.parse(req.body);
-    const companyId = await resolveCompanyId(req, input);
+    const company = await resolveCompanyId(req, input);
+    const isVerified = req.user.role === "admin" || company.company?.verificationStatus === "verified";
+    if (req.user.role === "recruiter" && input.status === "open" && !isVerified) {
+      throw httpError(403, "Company verification is required before publishing an internship", undefined, "COMPANY_VERIFICATION_REQUIRED");
+    }
     const requiredSkills = await buildRequirements(input.requiredSkills, 0.65, 3);
     const preferredSkills = await buildRequirements(input.preferredSkills, 0.35, 2);
     const deadline = toOptionalDate(input.deadline) || toOptionalDate(input.starts) || new Date(Date.now() + 90 * 24 * 60 * 60 * 1000);
     const internship = await prisma.internship.create({
       data: {
-        companyId,
+        companyId: company.companyId,
         title: input.title,
         description: input.description || `${input.title} internship opportunity`,
         location: input.location,
@@ -124,6 +159,7 @@ internshipRouter.post("/", requireAuth, requireRole("recruiter", "admin"), async
         salaryRange: input.salaryRange,
         deadline,
         duplicateKey: input.duplicateKey,
+        status: input.status || (isVerified ? "open" : "draft"),
         sources: input.source ? { create: input.source } : undefined,
         requirements: [...requiredSkills, ...preferredSkills].length
           ? { create: [...requiredSkills, ...preferredSkills] }
@@ -141,6 +177,15 @@ internshipRouter.put("/:id", requireAuth, requireRole("recruiter", "admin"), asy
   try {
     await assertRecruiterCanManageInternship(req.user, req.params.id);
     const input = internshipSchema.partial().parse(req.body);
+    if (req.user.role === "recruiter") {
+      const recruiter = await prisma.recruiter.findUnique({
+        where: { userId: req.user.id },
+        include: { company: { select: { verificationStatus: true } } },
+      });
+      if (input.status === "open" && recruiter?.company.verificationStatus !== "verified") {
+        throw httpError(403, "Company verification is required before publishing an internship", undefined, "COMPANY_VERIFICATION_REQUIRED");
+      }
+    }
     const requiredSkills = input.requiredSkills ? await buildRequirements(input.requiredSkills, 0.65, 3) : null;
     const preferredSkills = input.preferredSkills ? await buildRequirements(input.preferredSkills, 0.35, 2) : null;
     const internship = await prisma.internship.update({
@@ -155,6 +200,7 @@ internshipRouter.put("/:id", requireAuth, requireRole("recruiter", "admin"), asy
         salaryRange: input.salaryRange,
         deadline: input.deadline ? toOptionalDate(input.deadline) : undefined,
         duplicateKey: input.duplicateKey,
+        status: input.status,
         requirements:
           requiredSkills !== null || preferredSkills !== null
             ? {

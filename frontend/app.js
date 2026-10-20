@@ -122,6 +122,15 @@ let currentCompany = null;
 let adminStats = null;
 let adminSources = [];
 let adminAnalytics = [];
+let adminOverview = null;
+let adminUsers = null;
+let adminCompanies = null;
+let adminInternships = null;
+let adminMatchingHealth = null;
+let adminMatchingMetrics = null;
+let adminAuditLogs = null;
+let adminSettings = null;
+let adminWorkspaceSection = "overview";
 let editingStudentId = null;
 let editingInternshipId = null;
 let activeReviewApplicationId = null;
@@ -312,6 +321,14 @@ function clearAppData() {
   adminStats = null;
   adminSources = [];
   adminAnalytics = [];
+  adminOverview = null;
+  adminUsers = null;
+  adminCompanies = null;
+  adminInternships = null;
+  adminMatchingHealth = null;
+  adminMatchingMetrics = null;
+  adminAuditLogs = null;
+  adminSettings = null;
   editingStudentId = null;
   editingInternshipId = null;
   activeReviewApplicationId = null;
@@ -1179,7 +1196,7 @@ async function refreshAppState() {
       currentStudentProfile = null;
       const [studentData, internshipData, applicationData, notificationData] = await Promise.all([
         api.students(),
-        api.internships(),
+        api.myInternships(),
         api.recruiterApplications(recruiter.id),
         api.notifications(),
       ]);
@@ -1220,6 +1237,11 @@ async function refreshAppState() {
     adminStats = statsData;
     adminSources = sourceData;
     adminAnalytics = analyticsData;
+    const operational = await Promise.allSettled([
+      api.adminOverview(), api.adminUsers(), api.adminCompanies(), api.adminInternships(),
+      api.adminMatchingHealth(), api.adminMatchingMetrics(), api.adminAuditLogs(), api.adminSettings(),
+    ]);
+    [adminOverview, adminUsers, adminCompanies, adminInternships, adminMatchingHealth, adminMatchingMetrics, adminAuditLogs, adminSettings] = operational.map((result) => result.status === "fulfilled" ? result.value : null);
     renderAll();
   } finally {
     setAppLoading(false);
@@ -2030,6 +2052,57 @@ function renderAdmin() {
       `,
     )
     .join("") || `<div class="queue-item"><div><strong>No demand data</strong><span>Skill demand appears when internships are available.</span></div><span class="status">Idle</span></div>`;
+  renderAdminControlCenter();
+}
+
+function adminStatus(value) {
+  return `<span class="admin-status ${escapeHtml(String(value || "unknown").toLowerCase())}">${escapeHtml(value || "unknown")}</span>`;
+}
+
+function adminTable(headers, rows) {
+  return `<div class="admin-table-wrap"><table class="admin-table"><thead><tr>${headers.map((header) => `<th>${escapeHtml(header)}</th>`).join("")}</tr></thead><tbody>${rows || `<tr><td colspan="${headers.length}"><div class="empty-state"><strong>No records found</strong><p>There is nothing to review in this section.</p></div></td></tr>`}</tbody></table></div>`;
+}
+
+function adminUnavailable() {
+  return `<div class="empty-state"><strong>Operational data unavailable</strong><p>This control requires the Prisma/PostgreSQL admin API. The legacy local mock service does not expose this operational data.</p></div>`;
+}
+
+function renderAdminControlCenter() {
+  const target = $("#adminControlContent");
+  if (!target || currentRole() !== "admin") return;
+  document.querySelectorAll("[data-admin-section]").forEach((button) => button.classList.toggle("is-active", button.dataset.adminSection === adminWorkspaceSection));
+  if (!adminOverview) {
+    target.innerHTML = adminUnavailable();
+    return;
+  }
+  if (adminWorkspaceSection === "overview") {
+    const kpis = adminOverview.kpis;
+    target.innerHTML = `<div class="admin-kpi-grid">${[
+      ["Students", kpis.students, "users"], ["Recruiters", kpis.recruiters, "users"], ["Active internships", kpis.activeInternships, "briefcase-business"], ["Applications", kpis.applications, "file-text"],
+    ].map(([label, value, icon]) => `<article class="metric-card"><span class="metric-icon"><i data-lucide="${icon}"></i></span><strong>${escapeHtml(value)}</strong><span>${escapeHtml(label)}</span></article>`).join("")}</div><div class="admin-section-stack"><h3>Requires attention</h3>${adminOverview.alerts.length ? adminOverview.alerts.map((alert) => `<div class="admin-alert"><div><strong>${escapeHtml(alert.type.replaceAll("_", " "))}</strong><p class="meta">${escapeHtml(alert.message)}</p></div><button class="secondary-action compact" data-admin-section="${escapeHtml(alert.target)}" type="button">Review</button></div>`).join("") : `<div class="empty-state"><strong>No active operational alerts</strong><p>Company verification, stale source, and matching failures will appear here.</p></div>`}<h3>Recent administrative actions</h3>${adminOverview.recentActions.length ? adminOverview.recentActions.map((action) => `<div class="queue-item"><div><strong>${escapeHtml(action.action)}</strong><span>${escapeHtml(action.targetType)} · ${escapeHtml(formatTimestamp(action.createdAt))}</span></div>${adminStatus(action.outcome)}</div>`).join("") : `<div class="empty-state"><strong>No audit activity yet</strong><p>Privileged actions are recorded here after the first review or moderation decision.</p></div>`}</div>`;
+  } else if (adminWorkspaceSection === "users") {
+    if (!adminUsers) target.innerHTML = adminUnavailable();
+    else target.innerHTML = `<div class="admin-filter-row"><input id="adminUserSearch" placeholder="Search email or name" /><select id="adminUserRole"><option value="">All roles</option><option value="student">Students</option><option value="recruiter">Recruiters</option><option value="admin">Administrators</option></select><button class="secondary-action compact" data-admin-refresh="users" type="button">Search</button></div>${adminTable(["Name", "Email", "Role", "Status", "Last activity", "Actions"], adminUsers.items.map((user) => `<tr><td>${escapeHtml(user.displayName || "Not provided")}</td><td>${escapeHtml(user.email)}</td><td>${adminStatus(user.role)}</td><td>${adminStatus(user.status)}</td><td>${escapeHtml(formatTimestamp(user.lastActiveAt, "Never"))}</td><td><div class="admin-actions"><button class="secondary-action compact" data-admin-user-status="${escapeHtml(user.id)}" data-next-status="${user.status === "active" ? "suspended" : "active"}" type="button">${user.status === "active" ? "Suspend" : "Reactivate"}</button></div></td></tr>`).join(""))}`;
+  } else if (adminWorkspaceSection === "companies") {
+    if (!adminCompanies) target.innerHTML = adminUnavailable();
+    else target.innerHTML = `${adminTable(["Company", "Industry", "Location", "Status", "Recruiters", "Open roles", "Actions"], adminCompanies.items.map((company) => `<tr><td><strong>${escapeHtml(company.name)}</strong><br><span class="meta">${escapeHtml(company.website || "No website")}</span></td><td>${escapeHtml(company.industry || "-")}</td><td>${escapeHtml(company.location || "-")}</td><td>${adminStatus(company.verificationStatus)}</td><td>${escapeHtml(company._count.recruiters)}</td><td>${escapeHtml(company._count.internships)}</td><td><div class="admin-actions">${company.verificationStatus === "pending" ? `<button class="secondary-action compact" data-admin-company="${company.id}" data-decision="verify" type="button">Verify</button><button class="secondary-action compact" data-admin-company="${company.id}" data-decision="reject" type="button">Reject</button>` : ""}${company.verificationStatus !== "suspended" ? `<button class="secondary-action compact" data-admin-company="${company.id}" data-decision="suspend" type="button">Suspend</button>` : `<button class="secondary-action compact" data-admin-company="${company.id}" data-decision="restore" type="button">Restore</button>`}</div></td></tr>`).join(""))}`;
+  } else if (adminWorkspaceSection === "internships") {
+    if (!adminInternships) target.innerHTML = adminUnavailable();
+    else target.innerHTML = `${adminTable(["Internship", "Company", "Posting", "Moderation", "Applicants", "Actions"], adminInternships.items.map((internship) => `<tr><td><strong>${escapeHtml(internship.title)}</strong><br><span class="meta">${escapeHtml(internship.location || "-")}</span></td><td>${escapeHtml(internship.company.name)}<br>${adminStatus(internship.company.verificationStatus)}</td><td>${adminStatus(internship.status)}</td><td>${adminStatus(internship.moderationStatus)}</td><td>${escapeHtml(internship._count.applications)}</td><td><div class="admin-actions"><button class="secondary-action compact" data-admin-moderate="${internship.id}" data-moderation-status="flagged" type="button">Flag</button><button class="secondary-action compact" data-admin-moderate="${internship.id}" data-moderation-status="removed" type="button">Remove</button><button class="secondary-action compact" data-admin-moderate="${internship.id}" data-moderation-status="active" type="button">Restore</button></div></td></tr>`).join(""))}`;
+  } else if (adminWorkspaceSection === "matching") {
+    const health = adminMatchingHealth;
+    const metrics = adminMatchingMetrics;
+    target.innerHTML = health ? `<div class="admin-kpi-grid"><article class="metric-card"><span class="metric-icon"><i data-lucide="brain-circuit"></i></span><strong>${escapeHtml(health.matchingProvider)}</strong><span>Matching provider</span></article><article class="metric-card"><span class="metric-icon"><i data-lucide="activity"></i></span><strong>${escapeHtml(health.failures)}</strong><span>Recorded failures</span></article><article class="metric-card"><span class="metric-icon"><i data-lucide="database"></i></span><strong>${escapeHtml(metrics?.sampleSize ?? 0)}</strong><span>Scored recommendations</span></article></div><div class="queue-item"><div><strong>${escapeHtml(health.algorithmVersion)}</strong><span>Fallback: ${escapeHtml(health.fallback)}. This monitor does not make hiring decisions.</span></div>${adminStatus(health.latest?.status || "not recorded")}</div>` : adminUnavailable();
+  } else if (adminWorkspaceSection === "sources") {
+    target.innerHTML = `${adminTable(["Source", "Type", "Posting", "Last checked", "Status"], adminSources.map((source) => `<tr><td>${escapeHtml(source.platformName)}</td><td>${escapeHtml(source.sourceType)}</td><td>${escapeHtml(source.internship?.title || "-")}</td><td>${escapeHtml(formatTimestamp(source.lastCheckedAt, "Not recorded"))}</td><td>${adminStatus(source.isActive ? "active" : "inactive")}</td></tr>`).join(""))}<p class="meta">Scheduled source adapters are not configured in this MVP. Existing source records are shown without fabricated ingestion-run data.</p>`;
+  } else if (adminWorkspaceSection === "analytics") {
+    target.innerHTML = `<div class="admin-kpi-grid">${(adminAnalytics?.applicationFunnel || []).map((metric) => `<article class="metric-card"><span class="metric-icon"><i data-lucide="chart-no-axes-combined"></i></span><strong>${escapeHtml(metric.count)}</strong><span>${escapeHtml(metric.status)}</span></article>`).join("") || `<div class="empty-state"><strong>No aggregated analytics yet</strong><p>Metrics appear after applications are recorded.</p></div>`}</div>`;
+  } else if (adminWorkspaceSection === "audit") {
+    target.innerHTML = adminAuditLogs ? adminTable(["Action", "Actor", "Target", "Outcome", "When"], adminAuditLogs.items.map((entry) => `<tr><td>${escapeHtml(entry.action)}</td><td>${escapeHtml(entry.actor.displayName || entry.actor.email)}</td><td>${escapeHtml(entry.targetType)} · ${escapeHtml(entry.targetId)}</td><td>${adminStatus(entry.outcome)}</td><td>${escapeHtml(formatTimestamp(entry.createdAt))}</td></tr>`).join("")) : adminUnavailable();
+  } else {
+    target.innerHTML = adminSettings ? `<div class="queue-item"><div><strong>Company verification</strong><span>${escapeHtml(adminSettings.companyVerification)}</span></div>${adminStatus("enforced")}</div><div class="queue-item"><div><strong>Internship moderation</strong><span>${escapeHtml(adminSettings.moderation)}</span></div>${adminStatus("enforced")}</div><div class="queue-item"><div><strong>Matching provider</strong><span>${escapeHtml(adminSettings.matchingProvider)} / ${escapeHtml(adminSettings.explanationProvider)}</span></div>${adminStatus("read only")}</div>` : adminUnavailable();
+  }
+  renderLucideIcons(target);
 }
 
 function renderRoleNotifications() {
@@ -2612,6 +2685,61 @@ function bindEvents() {
       showFeedback(error.message, "error");
     } finally {
       restoreButton();
+    }
+  });
+  $("#adminView")?.addEventListener("click", async (event) => {
+    const sectionButton = event.target.closest("[data-admin-section]");
+    if (sectionButton) {
+      adminWorkspaceSection = sectionButton.dataset.adminSection;
+      renderAdminControlCenter();
+      return;
+    }
+    const refreshButton = event.target.closest("[data-admin-refresh]");
+    if (refreshButton?.dataset.adminRefresh === "users") {
+      const query = encodeURIComponent($("#adminUserSearch")?.value.trim() || "");
+      const role = encodeURIComponent($("#adminUserRole")?.value || "");
+      const params = `?query=${query}${role ? `&role=${role}` : ""}`;
+      try {
+        adminUsers = await api.adminUsers(params);
+        renderAdminControlCenter();
+      } catch (error) { showFeedback(error.message, "error"); }
+      return;
+    }
+    const userButton = event.target.closest("[data-admin-user-status]");
+    if (userButton) {
+      const nextStatus = userButton.dataset.nextStatus;
+      if (!window.confirm(`${nextStatus === "suspended" ? "Suspend" : "Reactivate"} this account?`)) return;
+      try {
+        await api.updateAdminUserStatus(userButton.dataset.adminUserStatus, { status: nextStatus, reason: `Admin action: ${nextStatus}` });
+        await refreshAppState();
+        showFeedback("Account status updated.", "success");
+      } catch (error) { showFeedback(error.message, "error"); }
+      return;
+    }
+    const companyButton = event.target.closest("[data-admin-company]");
+    if (companyButton) {
+      const decision = companyButton.dataset.decision;
+      const reason = decision === "reject" ? window.prompt("Provide a rejection reason:") : "Administrative review";
+      if (decision === "reject" && !reason) return;
+      if (!window.confirm(`Confirm company action: ${decision}?`)) return;
+      try {
+        await api.reviewAdminCompany(companyButton.dataset.adminCompany, decision, { reason, notes: reason });
+        await refreshAppState();
+        showFeedback("Company review saved.", "success");
+      } catch (error) { showFeedback(error.message, "error"); }
+      return;
+    }
+    const moderationButton = event.target.closest("[data-admin-moderate]");
+    if (moderationButton) {
+      const status = moderationButton.dataset.moderationStatus;
+      const reason = window.prompt(`Reason for marking this internship ${status}:`, status === "active" ? "Restored after review" : "Administrative review");
+      if (!reason) return;
+      if (!window.confirm(`Confirm internship moderation: ${status}?`)) return;
+      try {
+        await api.moderateAdminInternship(moderationButton.dataset.adminModerate, { status, reason });
+        await refreshAppState();
+        showFeedback("Internship moderation saved.", "success");
+      } catch (error) { showFeedback(error.message, "error"); }
     }
   });
   document.body.addEventListener("click", async (event) => {
