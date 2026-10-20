@@ -180,6 +180,7 @@ function splitPreferences(value) {
 
 function mapStudentProfile(profile) {
   if (!profile) return null;
+  const cvDocument = profile.cvDocuments?.[0] || null;
   return {
     id: profile.id,
     userId: profile.userId,
@@ -201,6 +202,7 @@ function mapStudentProfile(profile) {
       profile.cvSummary ||
       "FHNW student profile with project work, skill evidence, and internship readiness signals.",
     cvUrl: profile.cvUrl || `${normalized(`${profile.firstName} ${profile.lastName}`).replaceAll(" ", "-")}-cv.pdf`,
+    cvDocumentId: cvDocument?.id || "",
     avatarUrl: profile.avatarUrl || "",
     availability: formatDisplayDate(profile.availability),
     availabilityRaw: profile.availability,
@@ -546,6 +548,14 @@ function absoluteCvUrl(value) {
   return "";
 }
 
+function cvAccessMarkup(student, label) {
+  if (student.cvDocumentId) {
+    return `<button class="posting-link cv-download-action" data-download-cv-id="${escapeHtml(student.cvDocumentId)}" type="button">${escapeHtml(label)}</button>`;
+  }
+  const cvLink = absoluteCvUrl(student.cvUrl);
+  return cvLink ? `<a class="posting-link" href="${escapeHtml(cvLink)}" target="_blank" rel="noreferrer">${escapeHtml(label)}</a>` : escapeHtml(student.cvUrl || "Not uploaded yet");
+}
+
 function absoluteAssetUrl(value, fallback = "public/avatars/default-student.png") {
   if (!value) return fallback;
   if (/^https?:\/\//i.test(value) || value.startsWith("data:image/")) return value;
@@ -715,7 +725,6 @@ function tagList(items) {
 }
 
 function renderStudentProfile(student) {
-  const cvLink = absoluteCvUrl(student.cvUrl);
   $("#studentProfile").innerHTML = `
     <h3>${escapeHtml(student.name)}</h3>
     <p class="meta">${escapeHtml(student.program)}<br>Semester ${escapeHtml(student.semester)} - ${escapeHtml(student.location)} - ${escapeHtml(student.mode)}<br>Available ${escapeHtml(student.availability)}</p>
@@ -727,7 +736,7 @@ function renderStudentProfile(student) {
     ${tagList(student.skills)}
     <p class="meta">Experience: ${student.experience.map(escapeHtml).join(", ")}</p>
     <p class="meta">${student.languages.map(escapeHtml).join(" - ")}</p>
-    <p class="meta">CV file: ${cvLink ? `<a class="posting-link" href="${escapeHtml(cvLink)}" target="_blank" rel="noreferrer">Open CV</a>` : escapeHtml(student.cvUrl || "Not uploaded yet")}</p>
+    <p class="meta">CV file: ${cvAccessMarkup(student, "Open CV")}</p>
     <p class="meta">${escapeHtml(student.cvSummary)}</p>
   `;
 }
@@ -1908,7 +1917,6 @@ function renderCvReview(applicationId) {
   const result = calculateMatch(student, internship);
   const matchSignals = [...result.exactRequired, ...result.exactPreferred].slice(0, 6);
   const concerns = result.missing.slice(0, 4);
-  const cvLink = absoluteCvUrl(student.cvUrl);
   $("#cvReviewPanel").innerHTML = `
     <div class="cv-header">
       <div>
@@ -1920,7 +1928,7 @@ function renderCvReview(applicationId) {
     <div class="cv-grid">
       <div>
         <span class="cv-label">CV file</span>
-        ${cvLink ? `<a class="posting-link" href="${escapeHtml(cvLink)}" target="_blank" rel="noreferrer">Open uploaded CV</a>` : `<strong>${escapeHtml(student.cvUrl || "No CV uploaded")}</strong>`}
+        ${cvAccessMarkup(student, "Open uploaded CV")}
         <p class="meta">${escapeHtml(student.cvSummary)}</p>
       </div>
       <div>
@@ -2144,13 +2152,26 @@ async function uploadCvFile(file) {
   if (!editingStudentId && !currentStudentProfile?.id) throw new Error("Save your student profile before uploading a CV");
   const uploaded = await api.uploadCv(file);
   const studentId = editingStudentId || currentStudentProfile?.id;
-  await api.updateStudent(studentId, { cvUrl: uploaded.url || uploaded.storedPath || uploaded.fileName });
   await refreshAppState();
   renderAll({ studentId });
   if ($("#cvUploadStatus")) {
     $("#cvUploadStatus").textContent = `Stored CV: ${uploaded.fileName || uploaded.url}`;
   }
   showFeedback("CV uploaded successfully.", "success");
+}
+
+async function openCvDocument(documentId) {
+  const preview = window.open("", "_blank", "noopener");
+  try {
+    const { blob } = await api.downloadCv(documentId);
+    const url = URL.createObjectURL(blob);
+    if (preview) preview.location.href = url;
+    else window.open(url, "_blank", "noopener");
+    window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
+  } catch (error) {
+    if (preview) preview.close();
+    throw error;
+  }
 }
 
 async function uploadAvatarFile(file) {
@@ -2171,7 +2192,8 @@ async function uploadAvatarFile(file) {
 async function parseCvFile(file) {
   if (!file) throw new Error("Choose a CV file first");
   if (!editingStudentId && !currentStudentProfile?.id) throw new Error("Save your student profile before parsing a CV");
-  const parsed = await api.parseCv(file);
+  const parsedResponse = await api.parseCv(file);
+  const parsed = parsedResponse.parsed || parsedResponse;
   const form = $("#studentForm");
   const currentSkills = listFromInput(form.elements.skills.value);
   const mergedSkills = [...new Set([...currentSkills, ...(parsed.skills || [])])];
@@ -2187,7 +2209,7 @@ async function parseCvFile(file) {
   }
   const studentId = editingStudentId || currentStudentProfile?.id;
   const payload = buildStudentPayload(form, {
-    cvUrl: currentStudentProfile?.cvUrl || file.name,
+    cvUrl: parsedResponse.document?.fileUrl || currentStudentProfile?.cvUrl || file.name,
     projects: (parsed.experience?.length ? parsed.experience : ["CV parsed experience"]).slice(0, 2).map((title) => ({
       title,
       technologiesUsed: mergedSkills.join(", "),
@@ -2593,6 +2615,18 @@ function bindEvents() {
     }
   });
   document.body.addEventListener("click", async (event) => {
+    const cvButton = event.target.closest(".cv-download-action[data-download-cv-id]");
+    if (cvButton) {
+      const restoreButton = setButtonBusy(cvButton, "Opening...");
+      try {
+        await openCvDocument(cvButton.dataset.downloadCvId);
+      } catch (error) {
+        showFeedback(error.message, "error");
+      } finally {
+        restoreButton();
+      }
+      return;
+    }
     const notificationsRoot = $("#headerNotifications");
     const toggleButton = event.target.closest("#notificationToggle");
     if (toggleButton) {

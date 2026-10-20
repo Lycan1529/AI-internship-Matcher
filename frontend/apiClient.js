@@ -21,7 +21,7 @@ export function clearAuthToken() {
   localStorage.removeItem("fhnwAuthToken");
 }
 
-async function request(path, options = {}) {
+export async function request(path, options = {}) {
   const isFormData = options.body instanceof FormData;
   const timeout = abortAfter();
   try {
@@ -44,6 +44,25 @@ async function request(path, options = {}) {
       throw new Error("The backend is not responding. Make sure the local API on port 4000 is running.");
     }
     throw error;
+  } finally {
+    timeout.cancel();
+  }
+}
+
+async function requestFile(path) {
+  const timeout = abortAfter();
+  try {
+    const response = await fetch(`${API_BASE_URL}${path}`, {
+      signal: timeout.signal,
+      headers: authToken ? { Authorization: `Bearer ${authToken}` } : {},
+    });
+    if (!response.ok) {
+      const payload = await response.json().catch(() => null);
+      throw new Error(payload?.error?.message || payload?.error || `API request failed: ${response.status}`);
+    }
+    const disposition = response.headers.get("content-disposition") || "";
+    const fileName = disposition.match(/filename="?([^";]+)"?/i)?.[1] || "cv.pdf";
+    return { blob: await response.blob(), fileName };
   } finally {
     timeout.cancel();
   }
@@ -86,6 +105,7 @@ export const api = {
     form.append("cv", file);
     return request("/cv/parse", { method: "POST", body: form });
   },
+  downloadCv: (id) => requestFile(`/cv/${id}/download`),
   uploadAvatar: (file) => {
     const form = new FormData();
     form.append("avatar", file);

@@ -3,9 +3,9 @@ services:
     name: lycan-internship-api
     runtime: node
     rootDir: backend
-    buildCommand: npm install && npm run prisma:generate
+    buildCommand: npm ci && npm run prisma:generate
     startCommand: npm run prisma:migrate:deploy && npm start
-    healthCheckPath: /api/health
+    healthCheckPath: /health
     envVars:
       - key: NODE_ENV
         value: production

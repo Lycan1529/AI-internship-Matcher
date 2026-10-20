@@ -10,6 +10,7 @@ coverage/
 backend/coverage/
 backend/uploads/*
 !backend/uploads/.gitkeep
+backend/private-cv/
 backend/runtime_data.json
 npm-debug.log*
 .tools/

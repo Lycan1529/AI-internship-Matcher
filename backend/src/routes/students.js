@@ -79,7 +79,7 @@ studentRouter.get("/me", requireAuth, requireRole("student", "admin"), async (re
   try {
     const student = await prisma.studentProfile.findUniqueOrThrow({
       where: { userId: req.user.id },
-      include: { user: { select: { email: true } }, skills: { include: { skill: true } }, projects: true, cvDocuments: true },
+      include: { user: { select: { email: true } }, skills: { include: { skill: true } }, projects: true, cvDocuments: { orderBy: { createdAt: "desc" }, take: 1 } },
     });
     res.json(student);
   } catch (error) {
@@ -98,7 +98,7 @@ studentRouter.get("/:id", requireAuth, requireRole("admin", "recruiter", "studen
     }
     const student = await prisma.studentProfile.findUniqueOrThrow({
       where: { id: req.params.id },
-      include: { user: { select: { email: true } }, skills: { include: { skill: true } }, projects: true, cvDocuments: true },
+      include: { user: { select: { email: true } }, skills: { include: { skill: true } }, projects: true, cvDocuments: { orderBy: { createdAt: "desc" }, take: 1 } },
     });
     res.json(student);
   } catch (error) {
@@ -129,7 +129,7 @@ studentRouter.post("/", requireAuth, requireRole("student", "admin"), async (req
         skills: studentSkills.length ? { create: studentSkills } : undefined,
         projects: input.projects?.length ? { create: buildProjects(input.projects) } : undefined,
       },
-      include: { user: { select: { email: true } }, skills: { include: { skill: true } }, projects: true, cvDocuments: true },
+      include: { user: { select: { email: true } }, skills: { include: { skill: true } }, projects: true, cvDocuments: { orderBy: { createdAt: "desc" }, take: 1 } },
     });
     res.status(201).json(student);
   } catch (error) {
@@ -178,7 +178,7 @@ studentRouter.put("/:id", requireAuth, requireRole("student", "admin"), async (r
               }
             : undefined,
       },
-      include: { user: { select: { email: true } }, skills: { include: { skill: true } }, projects: true, cvDocuments: true },
+      include: { user: { select: { email: true } }, skills: { include: { skill: true } }, projects: true, cvDocuments: { orderBy: { createdAt: "desc" }, take: 1 } },
     });
     res.json(student);
   } catch (error) {

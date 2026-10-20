@@ -95,6 +95,7 @@ Do not put these keys in the frontend.
 
 - `POST /api/cv/upload`
 - `POST /api/cv/parse`
+- `GET /api/cv/:id/download`
 
 ### Admin
 
@@ -102,9 +103,17 @@ Do not put these keys in the frontend.
 - `GET /api/admin/sources`
 - `GET /api/admin/analytics`
 
+## Production Safeguards
+
+- `GET /health` provides liveness; `GET /api/health` verifies database readiness.
+- The server listens on the platform-provided `PORT` and closes Prisma connections on shutdown.
+- CORS accepts only `FRONTEND_ORIGIN` values.
+- Authentication routes have process-local rate limiting and the API sends baseline security headers.
+- CV files are not publicly served; student, authorized recruiter, or admin authorization is required to download one.
+
 ## Migration From Prototype
 
-The current frontend uses `localStorage`. Replace each local data operation with API calls in this order:
+The frontend now uses the API client for authentication, profiles, internships, applications, notifications, recommendations, company management, and uploads. `localStorage` is limited to the JWT session token and noncritical UI preferences such as theme, language, and saved-job bookmarks.
 
 1. Load internships from `GET /api/internships`.
 2. Submit applications with `POST /api/applications`.

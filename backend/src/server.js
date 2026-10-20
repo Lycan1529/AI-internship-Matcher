@@ -1,8 +1,6 @@
 import "dotenv/config";
 import express from "express";
 import cors from "cors";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
 import { authRouter } from "./routes/auth.js";
 import { studentRouter } from "./routes/students.js";
 import { recruiterRouter } from "./routes/recruiters.js";
@@ -17,12 +15,14 @@ import { profileRouter } from "./routes/profile.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { prisma } from "./db.js";
 import { assertRuntimeConfig, config } from "./config.js";
+import { authRateLimit, securityHeaders } from "./middleware/security.js";
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const allowedOrigins = config.frontendOrigin.split(",").map((origin) => origin.trim()).filter(Boolean);
 
 export function createApp() {
   const app = express();
+  app.disable("x-powered-by");
+  app.use(securityHeaders);
 
   app.use(
     cors({
@@ -34,12 +34,14 @@ export function createApp() {
     }),
   );
   app.use(express.json({ limit: "2mb" }));
-  app.use("/uploads", express.static(path.resolve(__dirname, "..", process.env.UPLOAD_DIR || "uploads")));
 
+  app.get("/health", (_req, res) => {
+    res.json({ status: "ok", service: "lycan-internship-api" });
+  });
   app.get("/api/health", async (_req, res) => {
     try {
       await prisma.$queryRawUnsafe("SELECT 1");
-      res.json({ status: "ok", service: "Lycan AI Internship Matching API", database: "connected" });
+      res.json({ status: "ok", service: "lycan-internship-api" });
     } catch {
       res.status(503).json({
         error: { code: "DATABASE_UNAVAILABLE", message: "The API is running, but the database is unavailable." },
@@ -47,7 +49,7 @@ export function createApp() {
     }
   });
 
-  app.use("/api/auth", authRouter);
+  app.use("/api/auth", authRateLimit, authRouter);
   app.use("/api/students", studentRouter);
   app.use("/api/recruiters", recruiterRouter);
   app.use("/api/companies", companyRouter);
@@ -66,9 +68,16 @@ if (process.env.NODE_ENV !== "test") {
   try {
     assertRuntimeConfig();
     const app = createApp();
-    app.listen(config.port, () => {
-      console.log(`API listening on http://localhost:${config.port}`);
+    const server = app.listen(config.port, () => {
+      console.log(`API listening on port ${config.port}`);
     });
+    const shutdown = (signal) => {
+      console.log(`Received ${signal}; closing API server.`);
+      server.close(() => prisma.$disconnect().finally(() => process.exit(0)));
+      setTimeout(() => process.exit(1), 10_000).unref();
+    };
+    process.once("SIGTERM", () => shutdown("SIGTERM"));
+    process.once("SIGINT", () => shutdown("SIGINT"));
   } catch (error) {
     console.error(`API startup failed: ${error.message}`);
     process.exit(1);

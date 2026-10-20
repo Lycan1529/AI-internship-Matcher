@@ -6,9 +6,10 @@ import { prisma } from "../db.js";
 import { requireAuth, requireRole } from "../middleware/auth.js";
 import { parseCvFile } from "../services/cvService.js";
 import { httpError } from "../middleware/errorHandler.js";
+import { config } from "../config.js";
 
 export const cvRouter = Router();
-const uploadDirectory = process.env.UPLOAD_DIR || "uploads/";
+const uploadDirectory = config.cvUploadDir;
 const upload = multer({
   dest: uploadDirectory,
   limits: { fileSize: 5 * 1024 * 1024, files: 1 },
@@ -30,7 +31,7 @@ async function resolveStudent(req) {
 async function persistCv(req, parsed = null) {
   if (!req.file) throw httpError(400, "A PDF CV file is required", undefined, "CV_FILE_REQUIRED");
   const student = await resolveStudent(req);
-  const fileUrl = `/uploads/${req.file.filename}`;
+  const fileUrl = `/private-cv/${req.file.filename}`;
   const document = await prisma.cVDocument.create({
     data: {
       studentId: student.id,
@@ -63,6 +64,38 @@ cvRouter.post("/parse", requireAuth, requireRole("student", "admin"), upload.sin
     const document = await persistCv(req, parsed);
     res.status(201).json({ document, parsed });
   } catch (error) {
+    next(error);
+  }
+});
+
+cvRouter.get("/:id/download", requireAuth, async (req, res, next) => {
+  try {
+    const document = await prisma.cVDocument.findFirst({
+      where:
+        req.user.role === "admin"
+          ? { id: req.params.id }
+          : req.user.role === "student"
+            ? { id: req.params.id, student: { userId: req.user.id } }
+            : {
+                id: req.params.id,
+                student: {
+                  applications: {
+                    some: {
+                      internship: { company: { recruiters: { some: { userId: req.user.id } } } },
+                    },
+                  },
+                },
+              },
+    });
+    if (!document) throw httpError(404, "CV document not found", undefined, "RESOURCE_NOT_FOUND");
+    const filePath = path.resolve(uploadDirectory, path.basename(document.fileUrl));
+    await fs.access(filePath);
+    res.download(filePath, document.fileName);
+  } catch (error) {
+    if (error?.code === "ENOENT") {
+      next(httpError(404, "CV file is no longer available", undefined, "CV_FILE_MISSING"));
+      return;
+    }
     next(error);
   }
 });

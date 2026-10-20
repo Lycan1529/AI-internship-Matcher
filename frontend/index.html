@@ -658,10 +658,11 @@
       </section>
     </div>
 
-    <script>
+    <script type="module">
+      import { api, setAuthToken } from "./apiClient.js";
+
       (() => {
         const LANGUAGE_KEY = "fhnwUiLanguage";
-        const API_ROOT = window.FHNW_API_BASE_URL;
         const textMap = {
           en: {
             language: "EN / DE",
@@ -777,50 +778,11 @@
           }, 3800);
         }
 
-        function abortAfter(timeoutMs = 8000) {
-          const controller = new AbortController();
-          const timer = window.setTimeout(() => controller.abort(), timeoutMs);
-          return {
-            signal: controller.signal,
-            cancel: () => window.clearTimeout(timer),
-          };
-        }
-
-        async function request(path, options = {}) {
-          const timeout = abortAfter();
-          try {
-            const response = await fetch(`${API_ROOT}${path}`, {
-              ...options,
-              signal: timeout.signal,
-              headers: {
-                "Content-Type": "application/json",
-                ...(options.headers || {}),
-              },
-            });
-            const payload = await response.json().catch(() => null);
-            if (!response.ok) throw new Error(payload?.error?.message || payload?.error || `Request failed (${response.status})`);
-            return payload;
-          } catch (error) {
-            if (error && error.name === "AbortError") {
-              throw new Error("The backend is not responding on port 4000.");
-            }
-            throw error;
-          } finally {
-            timeout.cancel();
-          }
-        }
-
         async function createBootstrapData(user, fullName, email) {
           const [firstName, ...rest] = (fullName || "").trim().split(/\s+/).filter(Boolean);
           const lastName = rest.join(" ") || (user.role === "student" ? "Student" : "Recruiter");
-          const token = localStorage.getItem("fhnwAuthToken") || "";
-          const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
-
           if (user.role === "student") {
-            await request("/students", {
-              method: "POST",
-              headers: authHeaders,
-              body: JSON.stringify({
+            await api.createStudent({
                 userId: user.id,
                 firstName: firstName || "FHNW",
                 lastName,
@@ -834,33 +796,24 @@
                 projects: [],
                 languages: ["English"],
                 mode: "Hybrid",
-              }),
             });
             return;
           }
 
           const companyName = firstName ? `${firstName} Talent Studio` : "Lycan Talent Studio";
-          const company = await request("/companies", {
-            method: "POST",
-            headers: authHeaders,
-            body: JSON.stringify({
+          const company = await api.createCompany({
               name: companyName,
               email,
               industry: "Technology",
               location: "Zurich",
               description: "Recruiter account created from the registration card.",
-            }),
           });
-          await request("/recruiters", {
-            method: "POST",
-            headers: authHeaders,
-            body: JSON.stringify({
+          await api.createRecruiter({
               userId: user.id,
               companyId: company.id,
               firstName: firstName || "Lycan",
               lastName,
               role: "Recruiter",
-            }),
           });
         }
 
@@ -893,14 +846,11 @@
           const restore = setButtonBusy(submitButton, document.documentElement.lang === "de" ? "Anmelden..." : "Signing in...");
           try {
             const data = new FormData(form);
-            const response = await request("/auth/login", {
-              method: "POST",
-              body: JSON.stringify({
+            const response = await api.login({
                 email: String(data.get("email") || "").trim(),
                 password: String(data.get("password") || ""),
-              }),
             });
-            localStorage.setItem("fhnwAuthToken", response.token);
+            setAuthToken(response.token);
             window.location.href = `./index.html?route=${encodeURIComponent(routeForRole(response.user.role))}`;
             showFeedback(currentCopy().signedIn, "success");
           } catch (error) {
@@ -926,15 +876,12 @@
             const email = String(data.get("email") || "").trim();
             const role = String(data.get("role") || "student");
             const name = String(data.get("name") || "").trim();
-            const response = await request("/auth/register", {
-              method: "POST",
-              body: JSON.stringify({
+            const response = await api.register({
                 email,
                 password: String(data.get("password") || ""),
                 role,
-              }),
             });
-            localStorage.setItem("fhnwAuthToken", response.token);
+            setAuthToken(response.token);
             await createBootstrapData(response.user, name, email);
             window.location.href = `./index.html?route=${encodeURIComponent(routeForRole(response.user.role))}`;
             showFeedback(currentCopy().created, "success");
